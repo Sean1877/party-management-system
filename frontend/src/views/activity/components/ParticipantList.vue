@@ -244,7 +244,7 @@ const handleSearch = () => {
 // 签到
 const handleCheckIn = async (participant) => {
   try {
-    await checkInActivity(props.activity.id, participant.user.id)
+    await checkInActivity(props.activity.id)
     ElMessage.success('签到成功')
     loadParticipants()
   } catch (error) {
@@ -256,12 +256,21 @@ const handleCheckIn = async (participant) => {
 // 请假
 const handleLeave = async (participant) => {
   try {
-    await leaveActivity(props.activity.id, participant.user.id)
+    const reason = await ElMessageBox.prompt('请输入请假原因', '请假', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /.+/,
+      inputErrorMessage: '请假原因不能为空'
+    })
+    
+    await leaveActivity(props.activity.id, reason.value)
     ElMessage.success('请假成功')
     loadParticipants()
   } catch (error) {
-    console.error('请假失败:', error)
-    ElMessage.error('请假失败')
+    if (error !== 'cancel') {
+      console.error('请假失败:', error)
+      ElMessage.error('请假失败')
+    }
   }
 }
 

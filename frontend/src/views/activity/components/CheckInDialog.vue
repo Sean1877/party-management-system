@@ -285,9 +285,7 @@ const handleManualCheckIn = async () => {
     
     submitting.value = true
     
-    await checkInActivity(props.activity.id, manualForm.userId, {
-      remark: manualForm.remark
-    })
+    await checkInActivity(props.activity.id)
     
     ElMessage.success('签到成功')
     

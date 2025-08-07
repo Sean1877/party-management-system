@@ -2,6 +2,7 @@ package com.party.repository;
 
 import com.party.entity.Activity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,7 @@ import java.util.List;
  * @version 1.0.0
  */
 @Repository
-public interface ActivityRepository extends JpaRepository<Activity, Long> {
+public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSpecificationExecutor<Activity> {
 
     /**
      * 根据组织ID查找活动

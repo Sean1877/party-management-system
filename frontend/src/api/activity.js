@@ -85,9 +85,9 @@ export function batchDeleteActivities(ids) {
  */
 export function joinActivity(id, remark = '') {
   return request({
-    url: `/activities/${id}/join`,
+    url: `/activity-participants/signup`,
     method: 'post',
-    data: { remark }
+    data: { activityId: id, remark }
   })
 }
 
@@ -98,8 +98,9 @@ export function joinActivity(id, remark = '') {
  */
 export function cancelJoinActivity(id) {
   return request({
-    url: `/activities/${id}/cancel`,
-    method: 'post'
+    url: `/activity-participants/cancel`,
+    method: 'post',
+    data: { activityId: id }
   })
 }
 
@@ -110,8 +111,9 @@ export function cancelJoinActivity(id) {
  */
 export function checkInActivity(id) {
   return request({
-    url: `/activities/${id}/checkin`,
-    method: 'post'
+    url: `/activity-participants/checkin`,
+    method: 'post',
+    data: { activityId: id }
   })
 }
 
@@ -123,9 +125,9 @@ export function checkInActivity(id) {
  */
 export function leaveActivity(id, reason) {
   return request({
-    url: `/activities/${id}/leave`,
+    url: `/activity-participants/leave`,
     method: 'post',
-    data: { reason }
+    data: { activityId: id, reason }
   })
 }
 
@@ -137,7 +139,7 @@ export function leaveActivity(id, reason) {
  */
 export function getActivityParticipants(id, params = {}) {
   return request({
-    url: `/activities/${id}/participants`,
+    url: `/activity-participants/activity/${id}`,
     method: 'get',
     params
   })
@@ -151,9 +153,9 @@ export function getActivityParticipants(id, params = {}) {
  */
 export function batchCheckIn(id, userIds) {
   return request({
-    url: `/activities/${id}/batch-checkin`,
+    url: `/activity-participants/batch-checkin`,
     method: 'post',
-    data: { userIds }
+    data: { activityId: id, userIds }
   })
 }
 
@@ -287,5 +289,86 @@ export function getRecentActivities(limit = 10) {
     url: '/activities/recent',
     method: 'get',
     params: { limit }
+  })
+}
+
+/**
+ * 获取用户参与的活动
+ * @param {number} userId 用户ID
+ * @param {Object} params 查询参数
+ * @returns {Promise}
+ */
+export function getUserActivities(userId, params = {}) {
+  return request({
+    url: `/activity-participants/user/${userId}`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 获取活动参与者统计
+ * @param {number} activityId 活动ID
+ * @returns {Promise}
+ */
+export function getActivityParticipantStats(activityId) {
+  return request({
+    url: `/activity-participants/activity/${activityId}/stats`,
+    method: 'get'
+  })
+}
+
+/**
+ * 获取用户参与统计
+ * @param {number} userId 用户ID
+ * @returns {Promise}
+ */
+export function getUserParticipantStats(userId) {
+  return request({
+    url: `/activity-participants/user/${userId}/stats`,
+    method: 'get'
+  })
+}
+
+/**
+ * 更新参与者状态
+ * @param {number} activityId 活动ID
+ * @param {number} userId 用户ID
+ * @param {number} status 状态
+ * @returns {Promise}
+ */
+export function updateParticipantStatus(activityId, userId, status) {
+  return request({
+    url: `/activity-participants/status`,
+    method: 'put',
+    data: { activityId, userId, status }
+  })
+}
+
+/**
+ * 检查用户是否参与活动
+ * @param {number} activityId 活动ID
+ * @param {number} userId 用户ID
+ * @returns {Promise}
+ */
+export function checkUserParticipation(activityId, userId) {
+  return request({
+    url: `/activity-participants/check`,
+    method: 'get',
+    params: { activityId, userId }
+  })
+}
+
+/**
+ * 标记缺席
+ * @param {number} activityId 活动ID
+ * @param {number} userId 用户ID
+ * @returns {Promise}
+ */
+export function markAbsent(activityId, userId) {
+  return request({
+    url: `/activity-participants/absent`,
+    method: 'post',
+    data: { activityId, userId }
   })
 }

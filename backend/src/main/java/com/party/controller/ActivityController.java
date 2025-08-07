@@ -1,14 +1,28 @@
 package com.party.controller;
 
+import com.party.entity.Activity;
+import com.party.entity.ActivityParticipant;
+import com.party.service.ActivityService;
+import com.party.service.ActivityParticipantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 活动管理控制器
@@ -20,6 +34,12 @@ import java.util.*;
 public class ActivityController {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityController.class);
+    
+    @Autowired
+    private ActivityService activityService;
+    
+    @Autowired
+    private ActivityParticipantService activityParticipantService;
 
     /**
      * 获取活动统计数据
@@ -29,10 +49,17 @@ public class ActivityController {
     public ResponseEntity<Map<String, Object>> getActivityStats() {
         try {
             Map<String, Object> stats = new HashMap<>();
-            stats.put("totalActivities", 25);
-            stats.put("ongoingActivities", 8);
-            stats.put("completedActivities", 15);
-            stats.put("plannedActivities", 2);
+            
+            // 获取各状态活动数量
+            Long totalActivities = activityService.countByStatus(null); // 总数
+            Long plannedActivities = activityService.countByStatus(1); // 计划中
+            Long ongoingActivities = activityService.countByStatus(2); // 进行中
+            Long completedActivities = activityService.countByStatus(3); // 已完成
+            
+            stats.put("totalActivities", totalActivities != null ? totalActivities : 0);
+            stats.put("plannedActivities", plannedActivities != null ? plannedActivities : 0);
+            stats.put("ongoingActivities", ongoingActivities != null ? ongoingActivities : 0);
+            stats.put("completedActivities", completedActivities != null ? completedActivities : 0);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -57,68 +84,25 @@ public class ActivityController {
     public ResponseEntity<Map<String, Object>> getRecentActivities(
             @Parameter(description = "限制数量") @RequestParam(defaultValue = "5") int limit) {
         try {
-        List<Map<String, Object>> activities = new ArrayList<>();
-        
-        // 模拟最近活动数据
-        Map<String, Object> activity1 = new HashMap<>();
-        activity1.put("id", 1);
-        activity1.put("title", "党史学习教育专题讲座");
-        activity1.put("description", "深入学习党的百年奋斗历程");
-        activity1.put("status", 1); // 进行中
-        activity1.put("startTime", "2024-01-15 14:00:00");
-        activity1.put("endTime", "2024-01-15 16:00:00");
-        activity1.put("location", "会议室A");
-        activity1.put("participantCount", 45);
-        activities.add(activity1);
-        
-        Map<String, Object> activity2 = new HashMap<>();
-        activity2.put("id", 2);
-        activity2.put("title", "志愿服务活动");
-        activity2.put("description", "社区环境清洁志愿服务");
-        activity2.put("status", 2); // 已完成
-        activity2.put("startTime", "2024-01-10 09:00:00");
-        activity2.put("endTime", "2024-01-10 12:00:00");
-        activity2.put("location", "社区广场");
-        activity2.put("participantCount", 32);
-        activities.add(activity2);
-        
-        Map<String, Object> activity3 = new HashMap<>();
-        activity3.put("id", 3);
-        activity3.put("title", "理论学习研讨会");
-        activity3.put("description", "学习贯彻新时代中国特色社会主义思想");
-        activity3.put("status", 0); // 计划中
-        activity3.put("startTime", "2024-01-20 15:00:00");
-        activity3.put("endTime", "2024-01-20 17:00:00");
-        activity3.put("location", "会议室B");
-        activity3.put("participantCount", 0);
-        activities.add(activity3);
-        
-        Map<String, Object> activity4 = new HashMap<>();
-        activity4.put("id", 4);
-        activity4.put("title", "党员发展对象培训");
-        activity4.put("description", "入党积极分子培训课程");
-        activity4.put("status", 1); // 进行中
-        activity4.put("startTime", "2024-01-12 10:00:00");
-        activity4.put("endTime", "2024-01-12 12:00:00");
-        activity4.put("location", "培训室");
-        activity4.put("participantCount", 28);
-        activities.add(activity4);
-        
-        Map<String, Object> activity5 = new HashMap<>();
-        activity5.put("id", 5);
-        activity5.put("title", "红色教育基地参观");
-        activity5.put("description", "参观革命历史纪念馆");
-        activity5.put("status", 2); // 已完成
-        activity5.put("startTime", "2024-01-08 08:00:00");
-        activity5.put("endTime", "2024-01-08 18:00:00");
-        activity5.put("location", "革命历史纪念馆");
-        activity5.put("participantCount", 56);
-        activities.add(activity5);
-        
-            // 根据limit参数限制返回数量
-            if (limit > 0 && limit < activities.size()) {
-                activities = activities.subList(0, limit);
-            }
+            List<Activity> recentActivities = activityService.findRecentActivities(limit);
+            
+            List<Map<String, Object>> activities = recentActivities.stream().map(activity -> {
+                Map<String, Object> activityMap = new HashMap<>();
+                activityMap.put("id", activity.getId());
+                activityMap.put("title", activity.getTitle());
+                activityMap.put("description", activity.getContent());
+                activityMap.put("status", activity.getStatus());
+                activityMap.put("startTime", activity.getStartTime() != null ? 
+                    activity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                activityMap.put("endTime", activity.getEndTime() != null ? 
+                    activity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                activityMap.put("location", activity.getLocation());
+                activityMap.put("participantCount", activity.getParticipantCount());
+                activityMap.put("maxParticipants", activity.getMaxParticipants());
+                activityMap.put("type", activity.getType());
+                activityMap.put("isRequired", activity.getIsRequired());
+                return activityMap;
+            }).collect(Collectors.toList());
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -144,17 +128,59 @@ public class ActivityController {
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
-            @Parameter(description = "状态") @RequestParam(required = false) Integer status) {
+            @Parameter(description = "状态") @RequestParam(required = false) Integer status,
+            @Parameter(description = "类型") @RequestParam(required = false) Integer type,
+            @Parameter(description = "组织ID") @RequestParam(required = false) Long organizationId,
+            @Parameter(description = "开始时间") @RequestParam(required = false) String startTime,
+            @Parameter(description = "结束时间") @RequestParam(required = false) String endTime) {
         try {
-            // 模拟分页数据
+            // 创建分页对象
+            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createTime"));
+            
+            // 解析时间参数
+            LocalDateTime startDateTime = null;
+            LocalDateTime endDateTime = null;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            
+            if (startTime != null && !startTime.isEmpty()) {
+                startDateTime = LocalDateTime.parse(startTime, formatter);
+            }
+            if (endTime != null && !endTime.isEmpty()) {
+                endDateTime = LocalDateTime.parse(endTime, formatter);
+            }
+            
+            // 调用服务层查询
+            Page<Activity> activityPage = activityService.findByConditions(
+                keyword, type, status, organizationId, startDateTime, endDateTime, pageable);
+            
+            // 转换为响应格式
+            List<Map<String, Object>> activities = activityPage.getContent().stream().map(activity -> {
+                Map<String, Object> activityMap = new HashMap<>();
+                activityMap.put("id", activity.getId());
+                activityMap.put("title", activity.getTitle());
+                activityMap.put("description", activity.getContent());
+                activityMap.put("status", activity.getStatus());
+                activityMap.put("type", activity.getType());
+                activityMap.put("startTime", activity.getStartTime() != null ? 
+                    activity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                activityMap.put("endTime", activity.getEndTime() != null ? 
+                    activity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                activityMap.put("location", activity.getLocation());
+                activityMap.put("participantCount", activity.getParticipantCount());
+                activityMap.put("maxParticipants", activity.getMaxParticipants());
+                activityMap.put("isRequired", activity.getIsRequired());
+                activityMap.put("organizationId", activity.getOrganizationId());
+                activityMap.put("organizerId", activity.getOrganizerId());
+                activityMap.put("createTime", activity.getCreatedAt() != null ?
+                activity.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                return activityMap;
+            }).collect(Collectors.toList());
+            
             Map<String, Object> result = new HashMap<>();
-            result.put("total", 25);
+            result.put("total", activityPage.getTotalElements());
             result.put("page", page);
             result.put("size", size);
-            
-            List<Map<String, Object>> activities = new ArrayList<>();
-            // 这里可以添加更多活动数据
-            
+            result.put("pages", activityPage.getTotalPages());
             result.put("records", activities);
             
             Map<String, Object> response = new HashMap<>();
@@ -180,20 +206,41 @@ public class ActivityController {
     public ResponseEntity<Map<String, Object>> getActivity(
             @Parameter(description = "活动ID") @PathVariable Long id) {
         try {
-            Map<String, Object> activity = new HashMap<>();
-            activity.put("id", id);
-            activity.put("title", "活动标题");
-            activity.put("description", "活动描述");
-            activity.put("status", 1);
-            activity.put("startTime", "2024-01-15 14:00:00");
-            activity.put("endTime", "2024-01-15 16:00:00");
-            activity.put("location", "会议室A");
-            activity.put("participantCount", 45);
+            Optional<Activity> activityOpt = activityService.findById(id);
+            
+            if (!activityOpt.isPresent()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "活动不存在");
+                return ResponseEntity.notFound().build();
+            }
+            
+            Activity activity = activityOpt.get();
+            Map<String, Object> activityMap = new HashMap<>();
+            activityMap.put("id", activity.getId());
+            activityMap.put("title", activity.getTitle());
+            activityMap.put("description", activity.getContent());
+            activityMap.put("status", activity.getStatus());
+            activityMap.put("type", activity.getType());
+            activityMap.put("startTime", activity.getStartTime() != null ? 
+                activity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("endTime", activity.getEndTime() != null ? 
+                activity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("location", activity.getLocation());
+            activityMap.put("participantCount", activity.getParticipantCount());
+            activityMap.put("maxParticipants", activity.getMaxParticipants());
+            activityMap.put("isRequired", activity.getIsRequired());
+            activityMap.put("organizationId", activity.getOrganizationId());
+            activityMap.put("organizerId", activity.getOrganizerId());
+            activityMap.put("createTime", activity.getCreatedAt() != null ?
+                activity.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("updateTime", activity.getUpdatedAt() != null ?
+                activity.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "获取活动详情成功");
-            response.put("data", activity);
+            response.put("data", activityMap);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -211,17 +258,53 @@ public class ActivityController {
     @PostMapping
     @Operation(summary = "创建活动", description = "创建新的活动")
     public ResponseEntity<Map<String, Object>> createActivity(
-            @RequestBody Map<String, Object> activity) {
+            @RequestBody Map<String, Object> activityData) {
         try {
-            // 模拟创建活动
-            activity.put("id", System.currentTimeMillis());
-            activity.put("status", 0); // 计划中
-            activity.put("participantCount", 0);
+            // 构建Activity对象
+            Activity activity = new Activity();
+            activity.setTitle((String) activityData.get("title"));
+            activity.setContent((String) activityData.get("description"));
+            activity.setType((Integer) activityData.get("type"));
+            activity.setLocation((String) activityData.get("location"));
+            activity.setMaxParticipants((Integer) activityData.get("maxParticipants"));
+            activity.setIsRequired((Boolean) activityData.get("isRequired"));
+            activity.setOrganizationId((Long) activityData.get("organizationId"));
+            activity.setOrganizerId((Long) activityData.get("organizerId"));
+            
+            // 解析时间
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            if (activityData.get("startTime") != null) {
+                activity.setStartTime(LocalDateTime.parse((String) activityData.get("startTime"), formatter));
+            }
+            if (activityData.get("endTime") != null) {
+                activity.setEndTime(LocalDateTime.parse((String) activityData.get("endTime"), formatter));
+            }
+            
+            // 创建活动
+            Activity savedActivity = activityService.createActivity(activity);
+            
+            // 构建响应数据
+            Map<String, Object> activityMap = new HashMap<>();
+            activityMap.put("id", savedActivity.getId());
+            activityMap.put("title", savedActivity.getTitle());
+            activityMap.put("description", savedActivity.getContent());
+            activityMap.put("status", savedActivity.getStatus());
+            activityMap.put("type", savedActivity.getType());
+            activityMap.put("startTime", savedActivity.getStartTime() != null ? 
+                savedActivity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("endTime", savedActivity.getEndTime() != null ? 
+                savedActivity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("location", savedActivity.getLocation());
+            activityMap.put("participantCount", savedActivity.getParticipantCount());
+            activityMap.put("maxParticipants", savedActivity.getMaxParticipants());
+            activityMap.put("isRequired", savedActivity.getIsRequired());
+            activityMap.put("organizationId", savedActivity.getOrganizationId());
+            activityMap.put("organizerId", savedActivity.getOrganizerId());
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "创建活动成功");
-            response.put("data", activity);
+            response.put("data", activityMap);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -240,14 +323,76 @@ public class ActivityController {
     @Operation(summary = "更新活动", description = "根据ID更新活动信息")
     public ResponseEntity<Map<String, Object>> updateActivity(
             @Parameter(description = "活动ID") @PathVariable Long id,
-            @RequestBody Map<String, Object> activity) {
+            @RequestBody Map<String, Object> activityData) {
         try {
-            activity.put("id", id);
+            // 检查活动是否存在
+            Optional<Activity> existingActivityOpt = activityService.findById(id);
+            if (!existingActivityOpt.isPresent()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "活动不存在");
+                return ResponseEntity.notFound().build();
+            }
+            
+            Activity activity = existingActivityOpt.get();
+            
+            // 更新活动信息
+            if (activityData.get("title") != null) {
+                activity.setTitle((String) activityData.get("title"));
+            }
+            if (activityData.get("description") != null) {
+                activity.setContent((String) activityData.get("description"));
+            }
+            if (activityData.get("type") != null) {
+                activity.setType((Integer) activityData.get("type"));
+            }
+            if (activityData.get("status") != null) {
+                activity.setStatus((Integer) activityData.get("status"));
+            }
+            if (activityData.get("location") != null) {
+                activity.setLocation((String) activityData.get("location"));
+            }
+            if (activityData.get("maxParticipants") != null) {
+                activity.setMaxParticipants((Integer) activityData.get("maxParticipants"));
+            }
+            if (activityData.get("isRequired") != null) {
+                activity.setIsRequired((Boolean) activityData.get("isRequired"));
+            }
+            
+            // 解析时间
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            if (activityData.get("startTime") != null) {
+                activity.setStartTime(LocalDateTime.parse((String) activityData.get("startTime"), formatter));
+            }
+            if (activityData.get("endTime") != null) {
+                activity.setEndTime(LocalDateTime.parse((String) activityData.get("endTime"), formatter));
+            }
+            
+            // 更新活动
+            Activity updatedActivity = activityService.updateActivity(activity);
+            
+            // 构建响应数据
+            Map<String, Object> activityMap = new HashMap<>();
+            activityMap.put("id", updatedActivity.getId());
+            activityMap.put("title", updatedActivity.getTitle());
+            activityMap.put("description", updatedActivity.getContent());
+            activityMap.put("status", updatedActivity.getStatus());
+            activityMap.put("type", updatedActivity.getType());
+            activityMap.put("startTime", updatedActivity.getStartTime() != null ? 
+                updatedActivity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("endTime", updatedActivity.getEndTime() != null ? 
+                updatedActivity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            activityMap.put("location", updatedActivity.getLocation());
+            activityMap.put("participantCount", updatedActivity.getParticipantCount());
+            activityMap.put("maxParticipants", updatedActivity.getMaxParticipants());
+            activityMap.put("isRequired", updatedActivity.getIsRequired());
+            activityMap.put("organizationId", updatedActivity.getOrganizationId());
+            activityMap.put("organizerId", updatedActivity.getOrganizerId());
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "更新活动成功");
-            response.put("data", activity);
+            response.put("data", activityMap);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -267,6 +412,18 @@ public class ActivityController {
     public ResponseEntity<Map<String, Object>> deleteActivity(
             @Parameter(description = "活动ID") @PathVariable Long id) {
         try {
+            // 检查活动是否存在
+            Optional<Activity> activityOpt = activityService.findById(id);
+            if (!activityOpt.isPresent()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "活动不存在");
+                return ResponseEntity.notFound().build();
+            }
+            
+            // 删除活动
+            activityService.deleteActivity(id);
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "删除活动成功");
@@ -278,6 +435,138 @@ public class ActivityController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "删除活动失败: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * 批量删除活动
+     */
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除活动", description = "批量删除多个活动")
+    public ResponseEntity<Map<String, Object>> batchDeleteActivities(
+            @RequestBody List<Long> ids) {
+        try {
+            activityService.batchDeleteActivities(ids);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "批量删除活动成功");
+            response.put("data", null);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("批量删除活动失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "批量删除活动失败: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * 更新活动状态
+     */
+    @PutMapping("/{id}/status")
+    @Operation(summary = "更新活动状态", description = "更新活动的状态")
+    public ResponseEntity<Map<String, Object>> updateActivityStatus(
+            @Parameter(description = "活动ID") @PathVariable Long id,
+            @Parameter(description = "状态") @RequestParam Integer status) {
+        try {
+            activityService.updateActivityStatus(id, status);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "更新活动状态成功");
+            response.put("data", null);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("更新活动状态失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "更新活动状态失败: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * 获取我的活动
+     */
+    @GetMapping("/my")
+    @Operation(summary = "获取我的活动", description = "获取当前用户参与的活动列表")
+    public ResponseEntity<Map<String, Object>> getMyActivities(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
+        try {
+            // 这里暂时使用固定的用户ID，实际应该从认证信息中获取
+            Long currentUserId = 1L; // TODO: 从JWT或Session中获取当前用户ID
+            
+            // 获取用户参与的活动记录
+            List<ActivityParticipant> participants = activityParticipantService.findByUserId(currentUserId);
+            
+            // 获取活动详情并转换为响应格式
+            List<Map<String, Object>> activities = new ArrayList<>();
+            for (ActivityParticipant participant : participants) {
+                Optional<Activity> activityOpt = activityService.findById(participant.getActivityId());
+                if (activityOpt.isPresent()) {
+                    Activity activity = activityOpt.get();
+                    Map<String, Object> activityMap = new HashMap<>();
+                    activityMap.put("id", activity.getId());
+                    activityMap.put("title", activity.getTitle());
+                    activityMap.put("description", activity.getContent());
+                    activityMap.put("status", activity.getStatus());
+                    activityMap.put("type", activity.getType());
+                    activityMap.put("startTime", activity.getStartTime() != null ? 
+                        activity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                    activityMap.put("endTime", activity.getEndTime() != null ? 
+                        activity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                    activityMap.put("location", activity.getLocation());
+                    activityMap.put("participantCount", activity.getParticipantCount());
+                    activityMap.put("maxParticipants", activity.getMaxParticipants());
+                    activityMap.put("isRequired", activity.getIsRequired());
+                    activityMap.put("organizationId", activity.getOrganizationId());
+                    activityMap.put("organizerId", activity.getOrganizerId());
+                    
+                    // 添加参与者相关信息
+                    activityMap.put("participantStatus", participant.getStatus());
+                    activityMap.put("signUpTime", participant.getCreatedAt() != null ? 
+                        participant.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                    activityMap.put("checkInTime", participant.getSignInTime() != null ? 
+                        participant.getSignInTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+                    
+                    activities.add(activityMap);
+                }
+            }
+            
+            // 手动分页
+            int start = (page - 1) * size;
+            int end = Math.min(start + size, activities.size());
+            List<Map<String, Object>> pagedActivities = activities.subList(start, end);
+            
+            int totalElements = activities.size();
+            int totalPages = (int) Math.ceil((double) totalElements / size);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("content", pagedActivities);
+            result.put("totalElements", totalElements);
+            result.put("totalPages", totalPages);
+            result.put("number", page - 1);
+            result.put("size", size);
+            result.put("first", page == 1);
+            result.put("last", page >= totalPages);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "获取我的活动成功");
+            response.put("data", result);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("获取我的活动失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取我的活动失败: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
