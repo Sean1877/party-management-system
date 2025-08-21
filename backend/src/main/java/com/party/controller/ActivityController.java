@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/activities")
 @Tag(name = "活动管理", description = "活动相关的API接口")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class ActivityController {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityController.class);
@@ -125,7 +125,7 @@ public class ActivityController {
     @GetMapping
     @Operation(summary = "获取活动列表", description = "分页获取活动列表")
     public ResponseEntity<Map<String, Object>> getActivities(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) Integer status,
@@ -134,8 +134,8 @@ public class ActivityController {
             @Parameter(description = "开始时间") @RequestParam(required = false) String startTime,
             @Parameter(description = "结束时间") @RequestParam(required = false) String endTime) {
         try {
-            // 创建分页对象
-            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createTime"));
+            // 创建分页对象（前端传递的page已经是从0开始的）
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             
             // 解析时间参数
             LocalDateTime startDateTime = null;
@@ -177,11 +177,11 @@ public class ActivityController {
             }).collect(Collectors.toList());
             
             Map<String, Object> result = new HashMap<>();
-            result.put("total", activityPage.getTotalElements());
+            result.put("totalElements", activityPage.getTotalElements());
             result.put("page", page);
             result.put("size", size);
-            result.put("pages", activityPage.getTotalPages());
-            result.put("records", activities);
+            result.put("totalPages", activityPage.getTotalPages());
+            result.put("content", activities);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

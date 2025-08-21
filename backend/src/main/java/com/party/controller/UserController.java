@@ -31,7 +31,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "用户管理", description = "用户相关的API接口")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);

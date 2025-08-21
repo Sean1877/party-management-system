@@ -31,7 +31,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/organizations")
 @Tag(name = "组织管理", description = "组织相关的API接口")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class OrganizationController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrganizationController.class);

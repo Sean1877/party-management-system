@@ -2,6 +2,7 @@ package com.party.controller;
 
 import com.party.entity.User;
 import com.party.service.UserService;
+import com.party.utils.JwtUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Arrays;
 
 /**
  * 认证控制器
@@ -25,7 +27,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "认证管理", description = "用户认证相关的API接口")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -35,6 +37,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JwtUtils jwtUtils;
 
     /**
      * 用户登录
@@ -57,28 +62,48 @@ public class AuthController {
             }
             
             // 查找用户
+            logger.debug("正在查找用户: {}", username);
             Optional<User> userOptional = userService.findByUsername(username);
             if (!userOptional.isPresent()) {
+                logger.warn("用户不存在: {}", username);
                 response.put("success", false);
                 response.put("message", "用户名或密码错误");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             
             User user = userOptional.get();
+            logger.debug("找到用户: id={}, username={}, realName={}, isActive={}", 
+                user.getId(), user.getUsername(), user.getRealName(), user.getIsActive());
             
             // 检查用户是否激活
             if (!user.getIsActive()) {
+                logger.warn("用户账户已被停用: {}", username);
                 response.put("success", false);
                 response.put("message", "用户账户已被停用");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             
             // 验证密码
-            if (!passwordEncoder.matches(password, user.getPassword())) {
+            logger.debug("开始验证密码，用户: {}", username);
+            logger.debug("输入密码: [{}]", password);
+            logger.debug("输入密码长度: {}", password != null ? password.length() : 0);
+            logger.debug("数据库密码哈希: {}", user.getPassword());
+            
+            boolean passwordMatches = passwordEncoder.matches(password, user.getPassword());
+            logger.debug("密码验证结果: {}", passwordMatches);
+            
+            // 测试用正确密码验证
+            boolean testPassword = passwordEncoder.matches("123456", user.getPassword());
+            logger.debug("测试密码123456验证结果: {}", testPassword);
+            
+            if (!passwordMatches) {
+                logger.warn("密码验证失败，用户: {}", username);
                 response.put("success", false);
                 response.put("message", "用户名或密码错误");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
+            
+            logger.info("密码验证成功，用户: {}", username);
             
             // 登录成功，返回用户信息（不包含密码）
             Map<String, Object> userInfo = new HashMap<>();
@@ -98,12 +123,22 @@ public class AuthController {
             roleInfo.put("permissions", java.util.Arrays.asList("user:read", "user:write", "activity:read", "activity:write"));
             userInfo.put("role", roleInfo);
             
+            // 生成真正的JWT token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("userId", user.getId());
+            claims.put("roles", Arrays.asList("ADMIN")); // 这里可以根据实际角色设置
+            claims.put("organizationId", user.getOrganizationId());
+            
+            String jwtToken = jwtUtils.generateToken(user.getUsername(), claims);
+            
             response.put("success", true);
             response.put("message", "登录成功");
             response.put("data", userInfo);
-            response.put("token", "mock-jwt-token-" + user.getId()); // Mock JWT token
+            response.put("token", jwtToken);
             
             logger.info("用户登录成功: {}", username);
+            logger.info("完整响应对象: {}", response);
+            logger.info("JWT Token: {}", jwtToken);
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
@@ -134,17 +169,23 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
         Map<String, Object> response = new HashMap<>();
         
-        // 这里是Mock实现，实际项目中应该解析JWT token
-        if (token == null || !token.startsWith("Bearer mock-jwt-token-")) {
+        if (token == null || !token.startsWith("Bearer ")) {
             response.put("success", false);
             response.put("message", "未登录或token无效");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         
         try {
-            // 从token中提取用户ID（Mock实现）
-            String userId = token.replace("Bearer mock-jwt-token-", "");
-            Long id = Long.parseLong(userId);
+            // 从JWT token中提取用户信息
+            String jwtToken = token.substring(7); // 移除"Bearer "前缀
+            
+            if (!jwtUtils.validateToken(jwtToken)) {
+                response.put("success", false);
+                response.put("message", "token无效或已过期");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            
+            Long id = jwtUtils.getUserIdFromToken(jwtToken);
             
             Optional<User> userOptional = userService.findById(id);
             if (!userOptional.isPresent()) {

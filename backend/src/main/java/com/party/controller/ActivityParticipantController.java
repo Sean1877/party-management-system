@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/activity-participants")
 @Tag(name = "活动参与者管理", description = "活动参与者相关的API接口")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class ActivityParticipantController {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityParticipantController.class);
