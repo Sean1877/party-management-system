@@ -61,7 +61,7 @@ class UserControllerIntegrationTest {
         testUser.setUsername("testuser");
         testUser.setPassword("password123");
         testUser.setRealName("测试用户");
-        testUser.setIdCard("123456789012345678");
+        testUser.setIdCard("110101199001011234"); // 有效的身份证号
         testUser.setPhone("13800138000");
         testUser.setEmail("test@example.com");
         testUser.setGender(1);

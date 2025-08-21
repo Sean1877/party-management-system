@@ -73,7 +73,7 @@ class UserServiceTest {
         when(userRepository.existsByIdCard(testUser.getIdCard())).thenReturn(false);
         when(userRepository.existsByPhone(testUser.getPhone())).thenReturn(false);
         when(userRepository.existsByEmail(testUser.getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(testUser.getPassword())).thenReturn("encodedPassword");
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // When
@@ -83,7 +83,7 @@ class UserServiceTest {
         assertNotNull(result);
         assertEquals(testUser.getUsername(), result.getUsername());
         verify(userRepository).save(any(User.class));
-        verify(passwordEncoder).encode(testUser.getPassword());
+        verify(passwordEncoder).encode("password123");
     }
 
     @Test
@@ -99,7 +99,7 @@ class UserServiceTest {
     @Test
     void testUpdateUser() {
         // Given
-        when(userRepository.existsById(testUser.getId())).thenReturn(true);
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // When
@@ -114,7 +114,7 @@ class UserServiceTest {
     @Test
     void testUpdateNonExistentUser() {
         // Given
-        when(userRepository.existsById(testUser.getId())).thenReturn(false);
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.empty());
 
         // When & Then
         assertThrows(RuntimeException.class, () -> userService.updateUser(testUser.getId(), testUser));
@@ -219,6 +219,7 @@ class UserServiceTest {
         // Given
         String newPassword = "newPassword123";
         when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("oldPassword123", testUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
