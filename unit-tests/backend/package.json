@@ -1,0 +1,104 @@
+{
+  "name": "party-management-backend-unit-tests",
+  "version": "1.0.0",
+  "description": "党建管理系统后端单元测试",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:service": "jest --testPathPattern=service",
+    "test:controller": "jest --testPathPattern=controller",
+    "test:repository": "jest --testPathPattern=repository",
+    "test:util": "jest --testPathPattern=util",
+    "test:security": "jest --testPathPattern=security",
+    "test:config": "jest --testPathPattern=config",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:performance": "jest --testPathPattern=performance",
+    "clean": "rm -rf coverage test-results",
+    "setup": "npm install"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8",
+    "jest-junit": "^16.0.0",
+    "jest-html-reporters": "^3.1.5",
+    "supertest": "^6.3.3",
+    "@types/supertest": "^2.0.16",
+    "mockito": "^2.2.4",
+    "testcontainers": "^10.2.1",
+    "@testcontainers/mysql": "^10.2.1",
+    "mysql2": "^3.6.5",
+    "redis-memory-server": "^0.7.0",
+    "@faker-js/faker": "^8.3.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html",
+      "json",
+      "clover"
+    ],
+    "collectCoverageFrom": [
+      "../../backend/src/**/*.java",
+      "!../../backend/src/**/Application.java",
+      "!../../backend/src/**/config/**",
+      "!../../backend/src/**/dto/**",
+      "!../../backend/src/**/entity/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    },
+    "reporters": [
+      "default",
+      [
+        "jest-junit",
+        {
+          "outputDirectory": "test-results",
+          "outputName": "junit.xml",
+          "suiteName": "Backend Unit Tests"
+        }
+      ],
+      [
+        "jest-html-reporters",
+        {
+          "publicPath": "test-results",
+          "filename": "report.html",
+          "pageTitle": "Backend Unit Test Report",
+          "logoImgPath": "./logo.png",
+          "hideIcon": false
+        }
+      ]
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/setup.js"
+    ],
+    "testTimeout": 30000,
+    "verbose": true,
+    "detectOpenHandles": true,
+    "forceExit": true,
+    "maxWorkers": "50%"
+  },
+  "keywords": [
+    "unit-test",
+    "jest",
+    "java",
+    "spring-boot",
+    "党建管理"
+  ],
+  "author": "党建管理系统开发团队",
+  "license": "MIT"
+}
