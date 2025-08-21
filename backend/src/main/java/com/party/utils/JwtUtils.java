@@ -147,6 +147,13 @@ public class JwtUtils {
     }
 
     /**
+     * 验证token（无用户名参数）
+     */
+    public Boolean validateToken(String token) {
+        return validateTokenFormat(token) && !isTokenExpired(token);
+    }
+
+    /**
      * 验证token格式
      */
     public Boolean validateTokenFormat(String token) {
@@ -217,6 +224,31 @@ public class JwtUtils {
         } catch (Exception e) {
             logger.error("从token获取角色信息失败: {}", e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * 从token中获取角色列表
+     */
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getRolesFromToken(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            Object roles = claims.get("roles");
+            if (roles instanceof java.util.List) {
+                return (java.util.List<String>) roles;
+            } else if (roles instanceof String) {
+                return java.util.Arrays.asList((String) roles);
+            }
+            // 如果没有roles，尝试获取单个role
+            String role = getRoleFromToken(token);
+            if (role != null) {
+                return java.util.Arrays.asList(role);
+            }
+            return new java.util.ArrayList<>();
+        } catch (Exception e) {
+            logger.error("从token获取角色列表失败: {}", e.getMessage());
+            return new java.util.ArrayList<>();
         }
     }
 

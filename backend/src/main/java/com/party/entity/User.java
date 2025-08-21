@@ -1,6 +1,7 @@
 package com.party.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -11,6 +12,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Objects;
 
 /**
@@ -22,6 +25,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
+@Schema(description = "用户信息")
 public class User {
 
     @Id
@@ -89,11 +93,25 @@ public class User {
     // 关联实体
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", insertable = false, updatable = false)
+    @JsonIgnore
+    @Schema(description = "所属组织")
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    @JsonIgnore
+    @Schema(description = "主要角色")
     private Role role;
+
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    @JsonIgnore
+    @Schema(description = "用户拥有的角色（多对多关系）")
+    private Set<Role> roles = new HashSet<>();
 
     // 构造函数
     public User() {}
@@ -257,6 +275,14 @@ public class User {
         this.role = role;
     }
 
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
     // 工具方法
     public String getGenderText() {
         if (gender == null) return "未知";
@@ -276,6 +302,42 @@ public class User {
             case 4: return "已退党";
             default: return "未知";
         }
+    }
+
+    public void addRole(Role role) {
+        if (roles == null) {
+            roles = new HashSet<>();
+        }
+        roles.add(role);
+        if (role.getRoleUsers() == null) {
+            role.setRoleUsers(new HashSet<>());
+        }
+        role.getRoleUsers().add(this);
+    }
+
+    public void removeRole(Role role) {
+        if (roles != null) {
+            roles.remove(role);
+        }
+        if (role != null && role.getRoleUsers() != null) {
+            role.getRoleUsers().remove(this);
+        }
+    }
+
+    public boolean hasRole(String roleName) {
+        if (roles == null || roleName == null) {
+            return false;
+        }
+        return roles.stream().anyMatch(role -> roleName.equals(role.getName()));
+    }
+
+    public boolean hasPermission(String permissionCode) {
+        if (roles == null || permissionCode == null) {
+            return false;
+        }
+        return roles.stream()
+            .flatMap(role -> role.getPermissions().stream())
+            .anyMatch(permission -> permissionCode.equals(permission.getCode()));
     }
 
     @Override

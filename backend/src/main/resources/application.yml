@@ -54,7 +54,7 @@ spring:
 
 # JWT配置
 jwt:
-  secret: partyManagementSystemSecretKey2023ForJWTTokenGeneration
+  secret: partyManagementSystemSecretKey2023ForJWTTokenGenerationWithHS512AlgorithmSupportAndSecureLength
   expiration: 86400000 # 24小时 (毫秒)
   refresh-expiration: 604800000 # 7天 (毫秒)
 

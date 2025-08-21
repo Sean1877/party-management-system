@@ -1,5 +1,8 @@
 package com.party.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -79,16 +82,20 @@ public class Organization {
     // 关联实体
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", insertable = false, updatable = false)
+    @JsonBackReference
     private Organization parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Organization> children = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "secretary_id", insertable = false, updatable = false)
+    @JsonIgnore
     private User secretary;
 
     @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<User> members = new ArrayList<>();
 
     // 构造函数
