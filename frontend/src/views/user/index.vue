@@ -95,7 +95,7 @@
     <!-- 用户表格 -->
     <el-card class="table-card">
       <el-table
-        v-if="Array.isArray(users)"
+        v-if="!loading && Array.isArray(users)"
         ref="userTableRef"
         v-loading="loading"
         :data="users"
@@ -103,6 +103,9 @@
         stripe
         style="width: 100%"
       >
+        <template v-if="users.length === 0">
+          <el-empty description="暂无用户数据" />
+        </template>
         <el-table-column type="selection" width="55" />
         
         <el-table-column prop="username" label="用户名" width="120" />
@@ -252,6 +255,7 @@ const getPartyMemberStatusType = (status) => {
 
 // 加载用户列表
 const loadUsers = async () => {
+  console.log('[DEBUG] loadUsers: 开始加载用户数据')
   try {
     loading.value = true
     const params = {
@@ -270,21 +274,26 @@ const loadUsers = async () => {
     const response = await getUserList(params)
     // 确保数据是数组，防止 'data2 is not iterable' 错误
     const responseData = response?.data
+    console.log('[DEBUG] loadUsers: 接收到的响应数据:', responseData)
+    
     if (responseData && typeof responseData === 'object') {
       users.value = Array.isArray(responseData.content) ? responseData.content : []
       pagination.total = responseData.totalElements || 0
+      console.log('[DEBUG] loadUsers: 成功设置 users.value，长度:', users.value.length)
     } else {
       users.value = []
       pagination.total = 0
+      console.log('[DEBUG] loadUsers: 响应数据无效，设置为空数组')
     }
   } catch (error) {
-    console.error('加载用户列表失败:', error)
+    console.error('[ERROR] loadUsers: 加载用户列表失败:', error)
     ElMessage.error('加载用户列表失败')
     // 确保在错误情况下数据也是数组
     users.value = []
     pagination.total = 0
   } finally {
     loading.value = false
+    console.log('[DEBUG] loadUsers: 完成加载，最终 users 类型:', typeof users.value, '是否为数组:', Array.isArray(users.value))
   }
 }
 
@@ -395,10 +404,15 @@ const handleExport = () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  // 确保selection是数组，防止null引用错误
+  console.log('[DEBUG] handleSelectionChange: 接收到的 selection 参数类型:', typeof selection, '是否为数组:', Array.isArray(selection))
+  console.log('[DEBUG] handleSelectionChange: selection 内容:', selection)
+  
+  // 确保 selection 是数组，防止 'data2 is not iterable' 错误
   if (Array.isArray(selection)) {
     selectedUsers.value = selection
+    console.log('[DEBUG] handleSelectionChange: 成功设置 selectedUsers，长度:', selectedUsers.value.length)
   } else {
+    console.error('[ERROR] handleSelectionChange: Selection is not an array:', selection)
     selectedUsers.value = []
   }
 }

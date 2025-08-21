@@ -54,6 +54,8 @@
       
       <!-- 参与者表格 -->
       <el-table
+        v-if="!loading && Array.isArray(participants)"
+        ref="tableRef"
         v-loading="loading"
         :data="filteredParticipants"
         @selection-change="handleSelectionChange"
@@ -61,6 +63,9 @@
         style="width: 100%"
         max-height="400px"
       >
+        <template v-if="participants.length === 0">
+          <el-empty description="暂无参与者数据" />
+        </template>
         <el-table-column type="selection" width="55" />
         
         <el-table-column prop="user.realName" label="姓名" width="100" />
@@ -228,6 +233,7 @@ watch(
 
 // 加载参与者列表
 const loadParticipants = async () => {
+  console.log('[DEBUG] loadParticipants: 开始加载参与者数据')
   if (!props.activity?.id) return
   
   try {
@@ -235,20 +241,25 @@ const loadParticipants = async () => {
     const response = await getActivityParticipants(props.activity.id)
     const responseData = response?.data
     
+    console.log('[DEBUG] loadParticipants: 接收到的数据类型:', typeof responseData, '是否为数组:', Array.isArray(responseData))
+    console.log('[DEBUG] loadParticipants: 数据内容:', responseData)
+    
     // 确保数据是数组，防止 'data2 is not iterable' 错误
     if (Array.isArray(responseData)) {
       participants.value = responseData
+      console.log('[DEBUG] loadParticipants: 成功设置 participants.value，长度:', participants.value.length)
     } else {
-      console.warn('参与者数据不是数组格式:', responseData)
+      console.warn('[ERROR] loadParticipants: 参与者数据不是数组格式:', responseData)
       participants.value = []
     }
   } catch (error) {
-    console.error('加载参与者列表失败:', error)
+    console.error('[ERROR] loadParticipants: 加载参与者列表失败:', error)
     ElMessage.error('加载参与者列表失败')
     // 确保在错误情况下数据也是数组
     participants.value = []
   } finally {
     loading.value = false
+    console.log('[DEBUG] loadParticipants: 完成加载，最终 participants 类型:', typeof participants.value, '是否为数组:', Array.isArray(participants.value))
   }
 }
 
@@ -332,11 +343,15 @@ const handleExportParticipants = async () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  // 确保selection是数组，防止null引用错误
+  console.log('[DEBUG] handleSelectionChange: 接收到的 selection 参数类型:', typeof selection, '是否为数组:', Array.isArray(selection))
+  console.log('[DEBUG] handleSelectionChange: selection 内容:', selection)
+  
+  // 确保 selection 是数组，防止 'data2 is not iterable' 错误
   if (Array.isArray(selection)) {
     selectedParticipants.value = selection
+    console.log('[DEBUG] handleSelectionChange: 成功设置 selectedParticipants，长度:', selectedParticipants.value.length)
   } else {
-    console.warn('表格选择数据不是数组格式:', selection)
+    console.error('[ERROR] handleSelectionChange: Selection is not an array:', selection)
     selectedParticipants.value = []
   }
 }

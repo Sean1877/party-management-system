@@ -312,8 +312,8 @@ const getActivityStatusType = (status) => {
 // 加载数据
 const loadData = async () => {
   try {
-    // 并行加载所有数据
-    const [userStatsRes, orgStatsRes, activityStatsRes, recentActivitiesRes, birthdayUsersRes, anniversaryUsersRes] = await Promise.all([
+    // 并行加载所有数据 - 使用Promise.allSettled防止单个失败影响整体
+    const results = await Promise.allSettled([
       getUserStats(),
       getOrganizationStats(),
       getActivityStats(),
@@ -322,34 +322,66 @@ const loadData = async () => {
       getPartyAnniversaryUsers()
     ])
     
-    // 设置统计数据
+    // 安全地提取结果，防止 'data2 is not iterable' 错误
+    const userStatsRes = results[0]?.status === 'fulfilled' ? results[0].value : null
+    const orgStatsRes = results[1]?.status === 'fulfilled' ? results[1].value : null
+    const activityStatsRes = results[2]?.status === 'fulfilled' ? results[2].value : null
+    const recentActivitiesRes = results[3]?.status === 'fulfilled' ? results[3].value : null
+    const birthdayUsersRes = results[4]?.status === 'fulfilled' ? results[4].value : null
+    const anniversaryUsersRes = results[5]?.status === 'fulfilled' ? results[5].value : null
+    
+    // 设置统计数据 - 添加类型检查防止 'data2 is not iterable' 错误
+    const userStatsData = userStatsRes?.data || {}
+    const orgStatsData = orgStatsRes?.data || {}
+    const activityStatsData = activityStatsRes?.data || {}
+    
     stats.value = {
-      totalUsers: userStatsRes.data.totalUsers || 0,
-      totalOrganizations: orgStatsRes.data.totalOrganizations || 0,
-      totalActivities: activityStatsRes.data.totalActivities || 0,
-      activeUsers: userStatsRes.data.activeUsers || 0
+      totalUsers: userStatsData.totalUsers || 0,
+      totalOrganizations: orgStatsData.totalOrganizations || 0,
+      totalActivities: activityStatsData.totalActivities || 0,
+      activeUsers: userStatsData.activeUsers || 0
     }
     
-    // 设置最近活动
-    recentActivities.value = recentActivitiesRes.data || []
+    // 设置最近活动 - 确保数据是数组
+    const recentActivitiesData = recentActivitiesRes?.data
+    recentActivities.value = Array.isArray(recentActivitiesData) ? recentActivitiesData : []
     
-    // 设置生日用户
-    birthdayUsers.value = birthdayUsersRes.data || []
+    // 设置生日用户 - 确保数据是数组
+    const birthdayUsersData = birthdayUsersRes?.data
+    birthdayUsers.value = Array.isArray(birthdayUsersData) ? birthdayUsersData : []
     
-    // 设置入党周年用户
-    anniversaryUsers.value = anniversaryUsersRes.data || []
+    // 设置入党周年用户 - 确保数据是数组
+    const anniversaryUsersData = anniversaryUsersRes?.data
+    anniversaryUsers.value = Array.isArray(anniversaryUsersData) ? anniversaryUsersData : []
     
-    // 设置党员状态分布数据
-    if (userStatsRes.data.partyMemberStats) {
+    // 设置党员状态分布数据 - 添加类型检查
+    if (userStatsData && userStatsData.partyMemberStats) {
+      const memberStats = userStatsData.partyMemberStats
       partyMemberStats.value = [
-        { value: userStatsRes.data.partyMemberStats.activists || 0, name: '入党积极分子' },
-        { value: userStatsRes.data.partyMemberStats.candidates || 0, name: '发展对象' },
-        { value: userStatsRes.data.partyMemberStats.probationary || 0, name: '预备党员' },
-        { value: userStatsRes.data.partyMemberStats.formal || 0, name: '正式党员' }
+        { value: memberStats.activists || 0, name: '入党积极分子' },
+        { value: memberStats.candidates || 0, name: '发展对象' },
+        { value: memberStats.probationary || 0, name: '预备党员' },
+        { value: memberStats.formal || 0, name: '正式党员' }
       ]
     }
   } catch (error) {
-    console.error('加载数据失败:', error)
+    console.error('Dashboard加载数据失败:', error)
+    console.error('错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    // 确保在错误情况下也有默认值
+    stats.value = {
+      totalUsers: 0,
+      totalOrganizations: 0,
+      totalActivities: 0,
+      activeUsers: 0
+    }
+    recentActivities.value = []
+    birthdayUsers.value = []
+    anniversaryUsers.value = []
+    partyMemberStats.value = []
   }
 }
 

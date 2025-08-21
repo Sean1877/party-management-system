@@ -95,7 +95,7 @@
     <!-- 活动表格 -->
     <el-card class="table-card">
       <el-table
-        v-if="Array.isArray(activities)"
+        v-if="!loading && Array.isArray(activities)"
         ref="activityTableRef"
         v-loading="loading"
         :data="activities"
@@ -103,6 +103,9 @@
         stripe
         style="width: 100%"
       >
+        <template v-if="activities.length === 0">
+          <el-empty description="暂无活动数据" />
+        </template>
         <el-table-column type="selection" width="55" />
         
         <el-table-column prop="title" label="活动标题" width="200" show-overflow-tooltip />
@@ -293,6 +296,7 @@ const getActivityStatusColor = (status) => {
 
 // 加载活动列表
 const loadActivities = async () => {
+  console.log('[DEBUG] loadActivities: 开始加载活动数据')
   try {
     loading.value = true
     const params = {
@@ -311,21 +315,27 @@ const loadActivities = async () => {
     const response = await getActivityList(params)
     // 确保数据是数组，防止 'data2 is not iterable' 错误
     const responseData = response?.data
+    
+    console.log('[DEBUG] loadActivities: 接收到的数据类型:', typeof responseData, '数据内容:', responseData)
+    
     if (responseData && typeof responseData === 'object') {
       activities.value = Array.isArray(responseData.content) ? responseData.content : []
       pagination.total = responseData.totalElements || 0
+      console.log('[DEBUG] loadActivities: 成功设置 activities.value，长度:', activities.value.length)
     } else {
       activities.value = []
       pagination.total = 0
+      console.log('[DEBUG] loadActivities: 响应数据格式异常，设置为空数组')
     }
   } catch (error) {
-    console.error('加载活动列表失败:', error)
+    console.error('[ERROR] loadActivities: 加载活动列表失败:', error)
     ElMessage.error('加载活动列表失败')
     // 确保在错误情况下数据也是数组
     activities.value = []
     pagination.total = 0
   } finally {
     loading.value = false
+    console.log('[DEBUG] loadActivities: 完成加载，最终 activities 类型:', typeof activities.value, '是否为数组:', Array.isArray(activities.value))
   }
 }
 
@@ -461,10 +471,15 @@ const handleExport = () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  // 确保selection是数组，防止null引用错误
+  console.log('[DEBUG] handleSelectionChange: 接收到的 selection 参数类型:', typeof selection, '是否为数组:', Array.isArray(selection))
+  console.log('[DEBUG] handleSelectionChange: selection 内容:', selection)
+  
+  // 确保 selection 是数组，防止 'data2 is not iterable' 错误
   if (Array.isArray(selection)) {
     selectedActivities.value = selection
+    console.log('[DEBUG] handleSelectionChange: 成功设置 selectedActivities，长度:', selectedActivities.value.length)
   } else {
+    console.error('[ERROR] handleSelectionChange: Selection is not an array:', selection)
     selectedActivities.value = []
   }
 }

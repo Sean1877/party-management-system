@@ -42,12 +42,14 @@ export const useUserStore = defineStore('user', () => {
       setToken(response.token)
       console.log('✅ Store: token已保存')
       
-      // 保存用户信息 - 修复：从response.data中获取用户信息
-      if (response.data) {
-        console.log('👤 Store: 保存用户信息', response.data)
-        userInfo.value = response.data
-        // 设置用户权限
-        permissions.value = response.data.role?.permissions || []
+      // 保存用户信息 - 修复：从response.data中获取用户信息，添加类型检查防止 'data2 is not iterable' 错误
+      const userData = response?.data
+      if (userData && typeof userData === 'object') {
+        console.log('👤 Store: 保存用户信息', userData)
+        userInfo.value = userData
+        // 设置用户权限 - 确保permissions是数组
+        const userPermissions = userData.role?.permissions
+        permissions.value = Array.isArray(userPermissions) ? userPermissions : []
         console.log('🔐 Store: 用户权限已设置', permissions.value)
       } else {
         console.warn('⚠️ Store: 响应中缺少用户数据')
@@ -70,10 +72,18 @@ export const useUserStore = defineStore('user', () => {
   const getUserInfoAction = async () => {
     try {
       const response = await getUserInfo()
-      const user = response.data
+      const user = response?.data
       
-      userInfo.value = user
-      permissions.value = user.role?.permissions || []
+      if (user && typeof user === 'object') {
+        userInfo.value = user
+        // 确保permissions是数组，防止 'data2 is not iterable' 错误
+        const userPermissions = user.role?.permissions
+        permissions.value = Array.isArray(userPermissions) ? userPermissions : []
+      } else {
+        console.warn('获取用户信息响应格式错误:', response)
+        userInfo.value = null
+        permissions.value = []
+      }
       
       return user
     } catch (error) {
