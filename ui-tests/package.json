@@ -1,0 +1,204 @@
+{
+  "name": "party-management-ui-tests",
+  "version": "1.0.0",
+  "description": "党建管理系统UI自动化测试",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    
+    // 浏览器项目测试
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
+    "test:desktop": "playwright test --project=chromium --project=firefox --project=webkit",
+    
+    // 测试套件 - 使用新的脚本运行器
+    "test:smoke": "node scripts/run-tests.js --suite=SMOKE",
+    "test:regression": "node scripts/run-tests.js --suite=REGRESSION",
+    "test:e2e": "node scripts/run-tests.js --suite=E2E",
+    "test:critical": "node scripts/run-tests.js --suite=CRITICAL",
+    
+    // 模块测试
+    "test:auth": "node scripts/run-tests.js --module=auth",
+    "test:user": "node scripts/run-tests.js --module=user-management",
+    "test:org": "node scripts/run-tests.js --module=organization",
+    "test:activity": "node scripts/run-tests.js --module=activity",
+    "test:fee": "node scripts/run-tests.js --module=fee",
+    "test:statistics": "node scripts/run-tests.js --module=statistics",
+    "test:system": "node scripts/run-tests.js --module=system",
+    
+    // 标签测试
+    "test:tags:smoke": "node scripts/run-tests.js --tags=@smoke",
+    "test:tags:critical": "node scripts/run-tests.js --tags=@critical",
+    "test:tags:high": "node scripts/run-tests.js --tags=@high",
+    "test:tags:ui": "node scripts/run-tests.js --tags=@ui",
+    "test:tags:api": "node scripts/run-tests.js --tags=@api",
+    
+    // 环境测试
+    "test:dev": "node scripts/run-tests.js --env=development",
+    "test:staging": "node scripts/run-tests.js --env=staging",
+    "test:prod": "node scripts/run-tests.js --env=production",
+    
+    // 组合测试
+    "test:smoke:headed": "node scripts/run-tests.js --suite=SMOKE --headed",
+    "test:auth:debug": "node scripts/run-tests.js --module=auth --debug",
+    "test:critical:firefox": "node scripts/run-tests.js --tags=@critical --browser=firefox",
+    
+    // 传统Playwright命令（保持兼容性）
+    "test:parallel": "playwright test --workers=4",
+    "test:serial": "playwright test --workers=1",
+    "test:retry": "playwright test --retries=3",
+    "test:timeout": "playwright test --timeout=60000",
+    "test:reporter:html": "playwright test --reporter=html",
+    "test:reporter:json": "playwright test --reporter=json",
+    "test:reporter:junit": "playwright test --reporter=junit",
+    "test:reporter:allure": "playwright test --reporter=allure-playwright",
+    "test:trace": "playwright test --trace=on",
+    "test:video": "playwright test --video=on",
+    "test:screenshot": "playwright test --screenshot=on",
+    
+    // 报告和工具
+    "show-report": "playwright show-report reports/html",
+    "show-trace": "playwright show-trace",
+    "install-browsers": "playwright install",
+    "install-deps": "playwright install-deps",
+    "codegen": "playwright codegen",
+    "codegen:localhost": "playwright codegen http://localhost:3000",
+    
+    // 清理和维护
+    "clean": "rm -rf reports test-results screenshots videos traces",
+    "clean:all": "npm run clean && rm -rf archives",
+    "setup": "npm run install-browsers && npm run install-deps",
+    
+    // 代码质量
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "npm run lint && npm run format:check",
+    
+    // CI/CD
+    "ci": "npm run validate && npm run test:regression",
+    "ci:smoke": "npm run validate && npm run test:smoke",
+    "ci:regression": "npm run validate && npm run test:regression",
+    "ci:e2e": "npm run validate && npm run test:e2e",
+    
+    // Docker
+    "docker:test": "docker run --rm -v $(pwd):/work -w /work mcr.microsoft.com/playwright:v1.40.0-focal npm test",
+    
+    // 工具脚本
+    "health-check": "playwright test tests/health-check.spec.js",
+    "test-runner:help": "node scripts/run-tests.js --help",
+    "generate-report": "node scripts/generate-report.js",
+    "archive-results": "node scripts/archive-results.js",
+    "cleanup-old-results": "node scripts/cleanup-old-results.js"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "automation",
+    "ui-testing",
+    "党建管理系统"
+  ],
+  "author": "党建管理系统开发团队",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-playwright": "^0.18.0",
+    "prettier": "^3.0.0",
+    "allure-playwright": "^2.9.0",
+    "dotenv": "^16.3.0"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "csv-parser": "^3.0.0",
+    "fs-extra": "^11.1.0",
+    "moment": "^2.29.0",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/party-management-system.git",
+    "directory": "ui-tests"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/party-management-system/issues"
+  },
+  "homepage": "https://github.com/your-org/party-management-system#readme",
+  "config": {
+    "test-timeout": 30000,
+    "retry-count": 2,
+    "worker-count": 4,
+    "base-url": "http://localhost:3000"
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "plugin:playwright/recommended",
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es2022": true
+    },
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-console": "warn",
+      "no-unused-vars": "error",
+      "playwright/expect-expect": "error",
+      "playwright/max-nested-describe": "error",
+      "playwright/missing-playwright-await": "error",
+      "playwright/no-conditional-in-test": "error",
+      "playwright/no-element-handle": "error",
+      "playwright/no-eval": "error",
+      "playwright/no-focused-test": "error",
+      "playwright/no-force-option": "warn",
+      "playwright/no-page-pause": "error",
+      "playwright/no-skipped-test": "warn",
+      "playwright/no-useless-await": "error",
+      "playwright/no-wait-for-timeout": "error",
+      "playwright/prefer-lowercase-title": "error",
+      "playwright/prefer-strict-equal": "error",
+      "playwright/prefer-to-be": "error",
+      "playwright/prefer-to-have-length": "error",
+      "playwright/require-top-level-describe": "error",
+      "playwright/valid-expect": "error"
+    }
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false,
+    "bracketSpacing": true,
+    "arrowParens": "avoid",
+    "endOfLine": "lf"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
+  "volta": {
+    "node": "18.18.0",
+    "npm": "9.8.1"
+  }
+}
