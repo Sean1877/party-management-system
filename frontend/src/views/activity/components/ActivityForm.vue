@@ -350,6 +350,22 @@ const rules = {
   ]
 }
 
+// 重置表单
+const resetForm = () => {
+  Object.keys(form).forEach(key => {
+    if (key === 'status') {
+      form[key] = 0
+    } else if (['requireRegistration', 'requireCheckIn'].includes(key)) {
+      form[key] = true
+    } else if (['type', 'organizationId', 'maxParticipants'].includes(key)) {
+      form[key] = null
+    } else {
+      form[key] = ''
+    }
+  })
+  formRef.value?.clearValidate()
+}
+
 // 监听活动数据变化
 watch(
   () => props.activity,
@@ -370,22 +386,6 @@ watch(
   },
   { immediate: true }
 )
-
-// 重置表单
-const resetForm = () => {
-  Object.keys(form).forEach(key => {
-    if (key === 'status') {
-      form[key] = 0
-    } else if (['requireRegistration', 'requireCheckIn'].includes(key)) {
-      form[key] = true
-    } else if (['type', 'organizationId', 'maxParticipants'].includes(key)) {
-      form[key] = null
-    } else {
-      form[key] = ''
-    }
-  })
-  formRef.value?.clearValidate()
-}
 
 // 提交表单
 const handleSubmit = async () => {

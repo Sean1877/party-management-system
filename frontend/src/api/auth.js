@@ -9,7 +9,7 @@ import request from '@/utils/request'
  */
 export function login(data) {
   return request({
-    url: '/api/auth/login',
+    url: '/auth/login',
     method: 'post',
     data
   })
@@ -21,7 +21,7 @@ export function login(data) {
  */
 export function logout() {
   return request({
-    url: '/api/auth/logout',
+    url: '/auth/logout',
     method: 'post'
   })
 }
@@ -32,7 +32,7 @@ export function logout() {
  */
 export function getUserInfo() {
   return request({
-    url: '/api/auth/me',
+    url: '/auth/me',
     method: 'get'
   })
 }
@@ -44,7 +44,7 @@ export function getUserInfo() {
  */
 export function refreshToken(refreshToken) {
   return request({
-    url: '/api/auth/refresh',
+    url: '/auth/refresh',
     method: 'post',
     data: { refreshToken }
   })
@@ -59,7 +59,7 @@ export function refreshToken(refreshToken) {
  */
 export function changePassword(data) {
   return request({
-    url: '/api/auth/change-password',
+    url: '/auth/change-password',
     method: 'post',
     data
   })
@@ -76,7 +76,7 @@ export function changePassword(data) {
  */
 export function resetPassword(data) {
   return request({
-    url: '/api/auth/reset-password',
+    url: '/auth/reset-password',
     method: 'post',
     data
   })
@@ -89,7 +89,7 @@ export function resetPassword(data) {
  */
 export function sendVerificationCode(phone) {
   return request({
-    url: '/api/auth/send-code',
+    url: '/auth/send-code',
     method: 'post',
     data: { phone }
   })

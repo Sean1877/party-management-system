@@ -166,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   getOrganizationTree, 
@@ -355,18 +355,45 @@ const handleToggleStatus = async (organization) => {
 // 展开/折叠全部
 const handleExpandAll = () => {
   expandAll.value = !expandAll.value
-  if (expandAll.value) {
-    tableRef.value.store.states.defaultExpandAll.value = true
-    tableRef.value.store.states.expandRows.value = []
-  } else {
-    tableRef.value.store.states.defaultExpandAll.value = false
-    tableRef.value.store.states.expandRows.value = []
-  }
+  
+  // 使用nextTick确保DOM更新完成后再操作表格状态
+  nextTick(() => {
+    if (tableRef.value && tableRef.value.store && tableRef.value.store.states) {
+      try {
+        if (expandAll.value) {
+          // 展开所有行
+          tableRef.value.store.states.defaultExpandAll.value = true
+          // 确保expandRows是数组
+          if (!Array.isArray(tableRef.value.store.states.expandRows.value)) {
+            tableRef.value.store.states.expandRows.value = []
+          }
+        } else {
+          // 折叠所有行
+          tableRef.value.store.states.defaultExpandAll.value = false
+          // 确保expandRows是数组
+          if (!Array.isArray(tableRef.value.store.states.expandRows.value)) {
+            tableRef.value.store.states.expandRows.value = []
+          } else {
+            tableRef.value.store.states.expandRows.value = []
+          }
+        }
+      } catch (error) {
+        console.error('操作表格展开状态时出错:', error)
+        // 重置为安全状态
+        expandAll.value = false
+      }
+    }
+  })
 }
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  selectedOrganizations.value = selection
+  // 确保selection是数组，防止null引用错误
+  if (Array.isArray(selection)) {
+    selectedOrganizations.value = selection
+  } else {
+    selectedOrganizations.value = []
+  }
 }
 
 // 表单提交成功

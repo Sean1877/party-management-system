@@ -61,10 +61,7 @@ const menuRoutes = computed(() => {
       return false
     }
     
-    // 检查权限
-    if (route.meta.permissions && route.meta.permissions.length > 0) {
-      return userStore.hasPermissions(route.meta.permissions)
-    }
+    // 权限检查已移除，显示所有菜单项
     
     return true
   })

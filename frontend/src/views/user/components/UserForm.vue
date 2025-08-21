@@ -398,6 +398,20 @@ const rules = {
   ]
 }
 
+// 重置表单
+const resetForm = () => {
+  Object.keys(form).forEach(key => {
+    if (key === 'active') {
+      form[key] = true
+    } else if (['gender', 'partyMemberStatus', 'organizationId', 'roleId'].includes(key)) {
+      form[key] = null
+    } else {
+      form[key] = ''
+    }
+  })
+  formRef.value?.clearValidate()
+}
+
 // 监听用户数据变化
 watch(
   () => props.user,
@@ -419,20 +433,6 @@ watch(
   },
   { immediate: true }
 )
-
-// 重置表单
-const resetForm = () => {
-  Object.keys(form).forEach(key => {
-    if (key === 'active') {
-      form[key] = true
-    } else if (['gender', 'partyMemberStatus', 'organizationId', 'roleId'].includes(key)) {
-      form[key] = null
-    } else {
-      form[key] = ''
-    }
-  })
-  formRef.value?.clearValidate()
-}
 
 // 提交表单
 const handleSubmit = async () => {

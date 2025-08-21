@@ -95,6 +95,8 @@
     <!-- 用户表格 -->
     <el-card class="table-card">
       <el-table
+        v-if="Array.isArray(users)"
+        ref="userTableRef"
         v-loading="loading"
         :data="users"
         @selection-change="handleSelectionChange"
@@ -217,6 +219,7 @@ const roles = ref([])
 const selectedUsers = ref([])
 const formVisible = ref(false)
 const currentUser = ref(null)
+const userTableRef = ref(null)
 
 // 搜索表单
 const searchForm = reactive({
@@ -265,11 +268,21 @@ const loadUsers = async () => {
     })
     
     const response = await getUserList(params)
-    users.value = response.data.content || []
-    pagination.total = response.data.totalElements || 0
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    const responseData = response?.data
+    if (responseData && typeof responseData === 'object') {
+      users.value = Array.isArray(responseData.content) ? responseData.content : []
+      pagination.total = responseData.totalElements || 0
+    } else {
+      users.value = []
+      pagination.total = 0
+    }
   } catch (error) {
     console.error('加载用户列表失败:', error)
     ElMessage.error('加载用户列表失败')
+    // 确保在错误情况下数据也是数组
+    users.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -382,7 +395,12 @@ const handleExport = () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  selectedUsers.value = selection
+  // 确保selection是数组，防止null引用错误
+  if (Array.isArray(selection)) {
+    selectedUsers.value = selection
+  } else {
+    selectedUsers.value = []
+  }
 }
 
 // 分页大小变化

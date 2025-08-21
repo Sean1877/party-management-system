@@ -36,16 +36,16 @@ service.interceptors.response.use(
     // 对响应数据做点什么
     const res = response.data
     
-    // 如果自定义状态码不是200，则判断为错误
-    if (res.code !== undefined && res.code !== 200) {
+    // 检查后端返回的success字段
+    if (res.success === false) {
       ElMessage({
         message: res.message || '请求失败',
         type: 'error',
         duration: 5 * 1000
       })
       
-      // 401: 未授权，token过期等
-      if (res.code === 401) {
+      // 如果是认证相关错误，跳转到登录页
+      if (res.message && (res.message.includes('未登录') || res.message.includes('token无效'))) {
         ElMessageBox.confirm(
           '登录状态已过期，您可以继续留在该页面，或者重新登录',
           '系统提示',

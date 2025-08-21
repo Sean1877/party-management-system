@@ -226,7 +226,7 @@ export function searchOrganizations(keyword, params = {}) {
  */
 export function getOrganizationStats() {
   return request({
-    url: '/organizations/stats',
+    url: '/organizations/statistics',
     method: 'get'
   })
 }

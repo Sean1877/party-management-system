@@ -206,7 +206,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart } from 'echarts/charts'
@@ -353,9 +353,30 @@ const loadData = async () => {
   }
 }
 
+// 窗口大小变化处理
+const handleResize = () => {
+  // 触发图表重绘
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'))
+  }, 100)
+}
+
 // 组件挂载时加载数据
-onMounted(() => {
-  loadData()
+onMounted(async () => {
+  // 等待 DOM 完全渲染后再初始化图表
+  await nextTick()
+  // 延迟一小段时间确保容器尺寸正确
+  setTimeout(() => {
+    loadData()
+  }, 100)
+  
+  // 添加窗口大小变化监听器
+  window.addEventListener('resize', handleResize)
+})
+
+// 组件卸载时清理事件监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -520,6 +541,10 @@ onMounted(() => {
 .chart-container {
   width: 100%;
   height: 300px;
+  min-width: 400px;
+  min-height: 300px;
+  position: relative;
+  overflow: hidden;
 }
 
 .quick-actions {

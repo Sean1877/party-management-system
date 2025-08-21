@@ -95,6 +95,8 @@
     <!-- 活动表格 -->
     <el-card class="table-card">
       <el-table
+        v-if="Array.isArray(activities)"
+        ref="activityTableRef"
         v-loading="loading"
         :data="activities"
         @selection-change="handleSelectionChange"
@@ -246,6 +248,7 @@ const participantVisible = ref(false)
 const checkInVisible = ref(false)
 const currentActivity = ref(null)
 const dateRange = ref([])
+const activityTableRef = ref(null)
 
 // 搜索表单
 const searchForm = reactive({
@@ -306,11 +309,21 @@ const loadActivities = async () => {
     })
     
     const response = await getActivityList(params)
-    activities.value = response.data.content || []
-    pagination.total = response.data.totalElements || 0
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    const responseData = response?.data
+    if (responseData && typeof responseData === 'object') {
+      activities.value = Array.isArray(responseData.content) ? responseData.content : []
+      pagination.total = responseData.totalElements || 0
+    } else {
+      activities.value = []
+      pagination.total = 0
+    }
   } catch (error) {
     console.error('加载活动列表失败:', error)
     ElMessage.error('加载活动列表失败')
+    // 确保在错误情况下数据也是数组
+    activities.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -448,7 +461,12 @@ const handleExport = () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  selectedActivities.value = selection
+  // 确保selection是数组，防止null引用错误
+  if (Array.isArray(selection)) {
+    selectedActivities.value = selection
+  } else {
+    selectedActivities.value = []
+  }
 }
 
 // 分页大小变化

@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createOrganization, updateOrganization, checkOrganizationCodeExists } from '@/api/organization'
 import { validatePhone, validateEmail } from '@/utils'
@@ -244,6 +244,28 @@ const rules = {
   ]
 }
 
+// 重置表单
+const resetForm = () => {
+  // 重置表单数据
+  Object.assign(form, {
+    name: '',
+    code: '',
+    type: null,
+    parentId: null,
+    sort: 0,
+    phone: '',
+    email: '',
+    address: '',
+    description: '',
+    active: true
+  })
+  
+  // 清除表单验证
+  nextTick(() => {
+    formRef.value?.clearValidate()
+  })
+}
+
 // 监听组织数据变化
 watch(
   () => props.organization,
@@ -280,30 +302,7 @@ watch(
   { immediate: true }
 )
 
-// 重置表单
-const resetForm = () => {
-  Object.keys(form).forEach(key => {
-    if (key === 'active') {
-      form[key] = true
-    } else if (key === 'sort') {
-      form[key] = 0
-    } else if (['type', 'parentId'].includes(key)) {
-      form[key] = null
-    } else {
-      form[key] = ''
-    }
-  })
-  
-  // 如果有父组织，设置父组织ID
-  if (props.parentOrganization) {
-    form.parentId = props.parentOrganization.id
-    if (props.parentOrganization.type < 3) {
-      form.type = props.parentOrganization.type + 1
-    }
-  }
-  
-  formRef.value?.clearValidate()
-}
+
 
 // 提交表单
 const handleSubmit = async () => {

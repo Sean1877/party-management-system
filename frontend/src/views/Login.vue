@@ -121,35 +121,73 @@ const loginRules = {
     { min: 2, max: 20, message: '用户名长度在 2 到 20 个字符', trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
+    { 
+      required: true, 
+      message: '请输入密码', 
+      trigger: 'blur',
+      validator: (rule, value, callback) => {
+        if (!value || value.length === 0) {
+          callback(new Error('请输入密码'))
+        } else if (value.length < 6 || value.length > 20) {
+          callback(new Error('密码长度在 6 到 20 个字符'))
+        } else {
+          callback()
+        }
+      }
+    }
   ]
 }
 
 // 处理登录
 const handleLogin = async () => {
-  if (!loginFormRef.value) return
+  console.log('🚀 开始登录流程')
+  
+  if (!loginFormRef.value) {
+    console.error('❌ 登录表单引用不存在')
+    return
+  }
   
   try {
+    console.log('📝 开始表单验证')
     const valid = await loginFormRef.value.validate()
-    if (!valid) return
+    if (!valid) {
+      console.log('❌ 表单验证失败')
+      return
+    }
+    console.log('✅ 表单验证通过')
     
     loading.value = true
     
-    await userStore.login({
-      username: loginForm.username,
-      password: loginForm.password
-    })
+    // 确保密码字段为字符串
+    const loginData = {
+      username: String(loginForm.username || ''),
+      password: String(loginForm.password || '')
+    }
+    console.log('📤 准备发送登录请求:', { username: loginData.username, password: '***' })
+    
+    console.log('🔐 调用用户store登录方法')
+    const loginResponse = await userStore.login(loginData)
+    console.log('✅ 用户store登录成功')
+    console.log('📥 登录响应数据:', loginResponse)
     
     ElMessage.success('登录成功')
+    console.log('💬 显示登录成功消息')
     
     // 跳转到首页
-    router.push('/')
+    console.log('🔄 准备跳转到首页')
+    await router.push('/')
+    console.log('✅ 路由跳转完成')
   } catch (error) {
-    console.error('登录失败:', error)
+    console.error('❌ 登录失败:', error)
+    console.error('❌ 错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response
+    })
     ElMessage.error(error.message || '登录失败，请检查用户名和密码')
   } finally {
     loading.value = false
+    console.log('🏁 登录流程结束')
   }
 }
 </script>

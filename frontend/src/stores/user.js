@@ -18,19 +18,50 @@ export const useUserStore = defineStore('user', () => {
   const avatar = computed(() => userInfo.value?.avatarUrl || '')
   
   // 登录
-  const loginAction = async (loginForm) => {
+  const loginAction = async (loginData) => {
+    console.log('🏪 Store: 开始登录操作', loginData)
     try {
-      const response = await login(loginForm)
-      const { token: accessToken, data: user } = response
+      console.log('🌐 Store: 调用登录API')
+      const response = await login(loginData)
+      console.log('📥 Store: 收到API响应', response)
       
-      token.value = accessToken
-      userInfo.value = user
-      permissions.value = user.role?.permissions || []
+      // 检查响应结构
+      if (!response) {
+        console.error('❌ Store: API响应为空')
+        throw new Error('登录响应为空')
+      }
       
-      setToken(accessToken)
+      if (!response.token) {
+        console.error('❌ Store: 响应中缺少token', response)
+        throw new Error('登录响应中缺少token')
+      }
       
+      // 保存token - 修复：从response对象中正确获取token
+      console.log('💾 Store: 保存token')
+      token.value = response.token
+      setToken(response.token)
+      console.log('✅ Store: token已保存')
+      
+      // 保存用户信息 - 修复：从response.data中获取用户信息
+      if (response.data) {
+        console.log('👤 Store: 保存用户信息', response.data)
+        userInfo.value = response.data
+        // 设置用户权限
+        permissions.value = response.data.role?.permissions || []
+        console.log('🔐 Store: 用户权限已设置', permissions.value)
+      } else {
+        console.warn('⚠️ Store: 响应中缺少用户数据')
+      }
+      
+      console.log('✅ Store: 登录操作完成')
       return response
     } catch (error) {
+      console.error('❌ Store: 登录失败:', error)
+      console.error('❌ Store: 错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response
+      })
       throw error
     }
   }

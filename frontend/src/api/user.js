@@ -188,7 +188,7 @@ export function searchUsers(keyword, params = {}) {
  */
 export function getUserStats() {
   return request({
-    url: '/users/stats',
+    url: '/users/statistics',
     method: 'get'
   })
 }
@@ -212,7 +212,7 @@ export function getRecentUsers(limit = 10) {
  */
 export function getBirthdayUsers() {
   return request({
-    url: '/users/birthday',
+    url: '/users/birthday-this-month',
     method: 'get'
   })
 }
@@ -223,7 +223,7 @@ export function getBirthdayUsers() {
  */
 export function getPartyAnniversaryUsers() {
   return request({
-    url: '/users/party-anniversary',
+    url: '/users/party-anniversary-this-month',
     method: 'get'
   })
 }
