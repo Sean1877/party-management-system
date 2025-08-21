@@ -156,8 +156,11 @@ const isEdit = computed(() => !!props.organization?.id)
 
 // 可选择的上级组织（排除自己和自己的子组织）
 const availableParents = computed(() => {
+  // 确保props.organizations是数组，防止 'data2 is not iterable' 错误
+  const organizationsData = Array.isArray(props.organizations) ? props.organizations : []
+  
   if (!isEdit.value) {
-    return props.organizations
+    return organizationsData
   }
   
   // 编辑模式下，排除自己和自己的子组织
@@ -165,8 +168,10 @@ const availableParents = computed(() => {
   
   // 递归获取所有子组织ID
   const getChildrenIds = (org) => {
-    if (org.children) {
-      org.children.forEach(child => {
+    if (org.children && Array.isArray(org.children)) {
+      // 确保children是数组，防止 'data2 is not iterable' 错误
+      const childrenData = Array.isArray(org.children) ? org.children : []
+      childrenData.forEach(child => {
         excludeIds.add(child.id)
         getChildrenIds(child)
       })
@@ -175,7 +180,7 @@ const availableParents = computed(() => {
   
   getChildrenIds(props.organization)
   
-  return props.organizations.filter(org => !excludeIds.has(org.id))
+  return organizationsData.filter(org => !excludeIds.has(org.id))
 })
 
 // 表单数据

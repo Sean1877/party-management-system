@@ -516,7 +516,7 @@ const loadOverallStats = async () => {
 const loadOrganizationStats = async () => {
   try {
     // 模拟API调用
-    organizationStats.value = [
+    const data = [
       {
         id: 1,
         name: '机关第一党支部',
@@ -548,15 +548,20 @@ const loadOrganizationStats = async () => {
         status: 'ACTIVE'
       }
     ]
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    organizationStats.value = Array.isArray(data) ? data : []
   } catch (error) {
+    console.error('加载组织统计数据失败:', error)
     ElMessage.error('加载组织统计数据失败')
+    // 确保在错误情况下数据也是数组
+    organizationStats.value = []
   }
 }
 
 const loadMemberActivityStats = async () => {
   try {
     // 模拟API调用
-    memberActivityStats.value = [
+    const data = [
       {
         id: 1,
         name: '张三',
@@ -588,8 +593,13 @@ const loadMemberActivityStats = async () => {
         activeScore: 5
       }
     ]
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    memberActivityStats.value = Array.isArray(data) ? data : []
   } catch (error) {
+    console.error('加载党员活动统计数据失败:', error)
     ElMessage.error('加载党员活动统计数据失败')
+    // 确保在错误情况下数据也是数组
+    memberActivityStats.value = []
   }
 }
 

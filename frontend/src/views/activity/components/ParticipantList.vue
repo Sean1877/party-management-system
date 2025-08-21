@@ -169,12 +169,15 @@ const visible = computed({
 
 // 过滤后的参与者列表
 const filteredParticipants = computed(() => {
+  // 确保participants.value是数组，防止 'data2 is not iterable' 错误
+  const participantsData = Array.isArray(participants.value) ? participants.value : []
+  
   if (!searchKeyword.value) {
-    return participants.value
+    return participantsData
   }
   
   const keyword = searchKeyword.value.toLowerCase()
-  return participants.value.filter(participant => {
+  return participantsData.filter(participant => {
     const user = participant.user
     return (
       user.realName?.toLowerCase().includes(keyword) ||
@@ -185,18 +188,21 @@ const filteredParticipants = computed(() => {
 
 // 已签到人数
 const checkedInCount = computed(() => {
-  return participants.value.filter(p => p.checkInTime).length
+  const participantsData = Array.isArray(participants.value) ? participants.value : []
+  return participantsData.filter(p => p.checkInTime).length
 })
 
 // 请假人数
 const leaveCount = computed(() => {
-  return participants.value.filter(p => p.leaveTime).length
+  const participantsData = Array.isArray(participants.value) ? participants.value : []
+  return participantsData.filter(p => p.leaveTime).length
 })
 
 // 签到率
 const checkInRate = computed(() => {
-  if (participants.value.length === 0) return 0
-  return (checkedInCount.value / participants.value.length) * 100
+  const participantsData = Array.isArray(participants.value) ? participants.value : []
+  if (participantsData.length === 0) return 0
+  return (checkedInCount.value / participantsData.length) * 100
 })
 
 // 监听活动变化
@@ -227,10 +233,20 @@ const loadParticipants = async () => {
   try {
     loading.value = true
     const response = await getActivityParticipants(props.activity.id)
-    participants.value = response.data || []
+    const responseData = response?.data
+    
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    if (Array.isArray(responseData)) {
+      participants.value = responseData
+    } else {
+      console.warn('参与者数据不是数组格式:', responseData)
+      participants.value = []
+    }
   } catch (error) {
     console.error('加载参与者列表失败:', error)
     ElMessage.error('加载参与者列表失败')
+    // 确保在错误情况下数据也是数组
+    participants.value = []
   } finally {
     loading.value = false
   }
@@ -316,7 +332,13 @@ const handleExportParticipants = async () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  selectedParticipants.value = selection
+  // 确保selection是数组，防止null引用错误
+  if (Array.isArray(selection)) {
+    selectedParticipants.value = selection
+  } else {
+    console.warn('表格选择数据不是数组格式:', selection)
+    selectedParticipants.value = []
+  }
 }
 </script>
 

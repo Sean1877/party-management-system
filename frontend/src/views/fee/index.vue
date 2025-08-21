@@ -299,7 +299,9 @@ const members = ref([])
 
 // 计算属性
 const activeStandards = computed(() => {
-  return standards.value.filter(s => s.status === 'ACTIVE')
+  // 确保standards.value是数组，防止 'data2 is not iterable' 错误
+  const standardsData = Array.isArray(standards.value) ? standards.value : []
+  return standardsData.filter(s => s.status === 'ACTIVE')
 })
 
 // 表单验证规则
@@ -324,7 +326,7 @@ const paymentRules = {
 const loadStandards = async () => {
   try {
     // 模拟API调用
-    standards.value = [
+    const responseData = [
       {
         id: 1,
         name: '基础党费标准',
@@ -346,15 +348,23 @@ const loadStandards = async () => {
         description: '学生党员固定缴费标准'
       }
     ]
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    if (Array.isArray(responseData)) {
+      standards.value = responseData
+    } else {
+      standards.value = []
+    }
   } catch (error) {
     ElMessage.error('加载党费标准失败')
+    // 确保在错误情况下数据也是数组
+    standards.value = []
   }
 }
 
 const loadPayments = async () => {
   try {
     // 模拟API调用
-    payments.value = [
+    const responseData = [
       {
         id: 1,
         memberName: '张三',
@@ -377,6 +387,13 @@ const loadPayments = async () => {
       }
     ]
     
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    if (Array.isArray(responseData)) {
+      payments.value = responseData
+    } else {
+      payments.value = []
+    }
+    
     // 加载统计数据
     statistics.value = {
       totalAmount: 15680,
@@ -386,19 +403,29 @@ const loadPayments = async () => {
     }
   } catch (error) {
     ElMessage.error('加载缴费记录失败')
+    // 确保在错误情况下数据也是数组
+    payments.value = []
   }
 }
 
 const loadMembers = async () => {
   try {
     // 模拟API调用
-    members.value = [
+    const responseData = [
       { id: 1, realName: '张三' },
       { id: 2, realName: '李四' },
       { id: 3, realName: '王五' }
     ]
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    if (Array.isArray(responseData)) {
+      members.value = responseData
+    } else {
+      members.value = []
+    }
   } catch (error) {
     ElMessage.error('加载党员列表失败')
+    // 确保在错误情况下数据也是数组
+    members.value = []
   }
 }
 

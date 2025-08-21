@@ -207,18 +207,24 @@ const searchForm = reactive({
 const flatOrganizations = computed(() => {
   const flatten = (orgs, level = 0) => {
     let result = []
+    // 确保orgs是数组，防止 'data2 is not iterable' 错误
+    if (!Array.isArray(orgs)) {
+      return result
+    }
     orgs.forEach(org => {
       result.push({
         ...org,
         displayName: '　'.repeat(level) + org.name
       })
-      if (org.children && org.children.length > 0) {
+      if (org.children && Array.isArray(org.children) && org.children.length > 0) {
         result = result.concat(flatten(org.children, level + 1))
       }
     })
     return result
   }
-  return flatten(organizations.value)
+  // 确保organizations.value是数组
+  const orgsData = Array.isArray(organizations.value) ? organizations.value : []
+  return flatten(orgsData)
 })
 
 // 获取组织类型颜色
@@ -246,10 +252,18 @@ const loadOrganizations = async () => {
     })
     
     const response = await getOrganizationTree(params)
-    organizations.value = response.data || []
+    // 确保数据是数组，防止 'data2 is not iterable' 错误
+    const responseData = response?.data
+    if (responseData && Array.isArray(responseData)) {
+      organizations.value = responseData
+    } else {
+      organizations.value = []
+    }
   } catch (error) {
     console.error('加载组织树失败:', error)
     ElMessage.error('加载组织树失败')
+    // 确保在错误情况下数据也是数组
+    organizations.value = []
   } finally {
     loading.value = false
   }

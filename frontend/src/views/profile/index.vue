@@ -249,7 +249,9 @@ const loadRecentActivities = async () => {
     
     // 统计数据
     stats.activityCount = response.data.totalElements || 0
-    stats.checkInCount = recentActivities.value.filter(a => a.checkInTime).length
+    // 确保recentActivities.value是数组，防止 'data2 is not iterable' 错误
+    const activitiesData = Array.isArray(recentActivities.value) ? recentActivities.value : []
+    stats.checkInCount = activitiesData.filter(a => a.checkInTime).length
   } catch (error) {
     console.error('加载最近活动失败:', error)
   }

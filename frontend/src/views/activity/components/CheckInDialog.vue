@@ -210,7 +210,9 @@ const manualRules = {
 
 // 穿梭框数据
 const transferData = computed(() => {
-  return participants.value
+  // 确保participants.value是数组，防止 'data2 is not iterable' 错误
+  const participantsData = Array.isArray(participants.value) ? participants.value : []
+  return participantsData
     .filter(p => !p.checkInTime && !p.leaveTime)
     .map(p => ({
       key: p.user.id,
@@ -242,9 +244,11 @@ const loadParticipants = async () => {
   
   try {
     const response = await getActivityParticipants(props.activity.id)
-    participants.value = response.data || []
+    const responseData = response?.data
+    participants.value = Array.isArray(responseData) ? responseData : []
   } catch (error) {
     console.error('加载参与者列表失败:', error)
+    participants.value = []
   }
 }
 
@@ -258,9 +262,11 @@ const searchUsers = async (query) => {
   try {
     searchLoading.value = true
     const response = await searchUsersAPI({ keyword: query, size: 20 })
-    searchResults.value = response.data.content || []
+    const responseData = response?.data?.content
+    searchResults.value = Array.isArray(responseData) ? responseData : []
   } catch (error) {
     console.error('搜索用户失败:', error)
+    searchResults.value = []
   } finally {
     searchLoading.value = false
   }
@@ -374,7 +380,9 @@ const loadRealtimeRecords = async () => {
   
   try {
     const response = await getActivityParticipants(props.activity.id)
-    const checkedInParticipants = (response.data || [])
+    const responseData = response?.data
+    const participantsData = Array.isArray(responseData) ? responseData : []
+    const checkedInParticipants = participantsData
       .filter(p => p.checkInTime)
       .sort((a, b) => new Date(b.checkInTime) - new Date(a.checkInTime))
       .slice(0, 5) // 只显示最近5条
@@ -382,6 +390,7 @@ const loadRealtimeRecords = async () => {
     realtimeRecords.value = checkedInParticipants
   } catch (error) {
     console.error('加载实时记录失败:', error)
+    realtimeRecords.value = []
   }
 }
 
