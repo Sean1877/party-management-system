@@ -169,9 +169,7 @@ const availableParents = computed(() => {
   // 递归获取所有子组织ID
   const getChildrenIds = (org) => {
     if (org.children && Array.isArray(org.children)) {
-      // 确保children是数组，防止 'data2 is not iterable' 错误
-      const childrenData = Array.isArray(org.children) ? org.children : []
-      childrenData.forEach(child => {
+      org.children.forEach(child => {
         excludeIds.add(child.id)
         getChildrenIds(child)
       })

@@ -343,15 +343,11 @@ const handleExportParticipants = async () => {
 
 // 表格选择变化
 const handleSelectionChange = (selection) => {
-  console.log('[DEBUG] handleSelectionChange: 接收到的 selection 参数类型:', typeof selection, '是否为数组:', Array.isArray(selection))
-  console.log('[DEBUG] handleSelectionChange: selection 内容:', selection)
-  
-  // 确保 selection 是数组，防止 'data2 is not iterable' 错误
+  // 确保selection是数组，防止null引用错误
   if (Array.isArray(selection)) {
     selectedParticipants.value = selection
-    console.log('[DEBUG] handleSelectionChange: 成功设置 selectedParticipants，长度:', selectedParticipants.value.length)
   } else {
-    console.error('[ERROR] handleSelectionChange: Selection is not an array:', selection)
+    console.warn('表格选择数据不是数组格式:', selection)
     selectedParticipants.value = []
   }
 }

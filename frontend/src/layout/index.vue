@@ -28,7 +28,6 @@
 </template>
 
 <script setup>
-import { onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import Sidebar from './components/Sidebar.vue'
 import Navbar from './components/Navbar.vue'

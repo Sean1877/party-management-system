@@ -210,9 +210,7 @@ const manualRules = {
 
 // 穿梭框数据
 const transferData = computed(() => {
-  // 确保participants.value是数组，防止 'data2 is not iterable' 错误
-  const participantsData = Array.isArray(participants.value) ? participants.value : []
-  return participantsData
+  return participants.value
     .filter(p => !p.checkInTime && !p.leaveTime)
     .map(p => ({
       key: p.user.id,

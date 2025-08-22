@@ -76,10 +76,10 @@
     <!-- 组织树表格 -->
     <el-card class="table-card">
       <el-table
-        v-if="!loading && Array.isArray(flatOrganizations)"
+        v-if="!loading && Array.isArray(organizations)"
         ref="tableRef"
         v-loading="loading"
-        :data="flatOrganizations"
+        :data="organizations"
         @selection-change="handleSelectionChange"
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
@@ -87,7 +87,7 @@
         stripe
         style="width: 100%"
       >
-        <template v-if="flatOrganizations.length === 0">
+        <template v-if="organizations.length === 0">
           <el-empty description="暂无组织数据" />
         </template>
         <el-table-column type="selection" width="55" />

@@ -14,20 +14,8 @@ import '@/styles/index.scss'
 const app = createApp(App)
 
 // 注册Element Plus图标
-console.log('[DEBUG] main.js: ElementPlusIconsVue 类型:', typeof ElementPlusIconsVue)
-console.log('[DEBUG] main.js: ElementPlusIconsVue 内容:', ElementPlusIconsVue)
-
-if (ElementPlusIconsVue && typeof ElementPlusIconsVue === 'object') {
-  const entries = Object.entries(ElementPlusIconsVue)
-  console.log('[DEBUG] main.js: Object.entries 结果类型:', typeof entries, '是否为数组:', Array.isArray(entries))
-  console.log('[DEBUG] main.js: entries 长度:', entries.length)
-  
-  for (const [key, component] of entries) {
-    app.component(key, component)
-  }
-  console.log('[DEBUG] main.js: 成功注册', entries.length, '个图标组件')
-} else {
-  console.error('[ERROR] main.js: ElementPlusIconsVue 不是有效对象:', ElementPlusIconsVue)
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
 }
 
 app.use(createPinia())

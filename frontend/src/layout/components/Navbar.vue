@@ -97,9 +97,7 @@ const userStore = useUserStore()
 
 // 面包屑导航
 const breadcrumbs = computed(() => {
-  // 确保route.matched是数组，防止 'data2 is not iterable' 错误
-  const matchedRoutes = Array.isArray(route.matched) ? route.matched : []
-  const matched = matchedRoutes.filter(item => item.meta && item.meta.title)
+  const matched = route.matched.filter(item => item.meta && item.meta.title)
   const breadcrumbList = []
   
   matched.forEach(item => {

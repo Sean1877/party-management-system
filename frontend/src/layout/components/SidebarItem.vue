@@ -45,20 +45,17 @@ const userStore = useUserStore()
 
 // 是否有子菜单
 const hasChildren = computed(() => {
-  // 确保route.children是数组，防止 'data2 is not iterable' 错误
-  const childrenData = Array.isArray(props.route.children) ? props.route.children : []
-  
-  if (childrenData.length === 0) {
+  if (!props.route.children || props.route.children.length === 0) {
     return false
   }
   
   // 过滤掉隐藏的和没有权限的子菜单
-  const visibleChildren = childrenData.filter(child => {
+  const visibleChildren = props.route.children.filter(child => {
     if (child.meta && child.meta.hidden) {
       return false
     }
     
-    if (child.meta && child.meta.permissions && Array.isArray(child.meta.permissions) && child.meta.permissions.length > 0) {
+    if (child.meta && child.meta.permissions && child.meta.permissions.length > 0) {
       return userStore.hasPermissions(child.meta.permissions)
     }
     

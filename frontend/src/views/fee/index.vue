@@ -20,15 +20,7 @@
             </el-button>
           </div>
 
-          <el-table
-            v-if="!loading && Array.isArray(standards)"
-            :data="standards"
-            stripe
-            style="width: 100%"
-          >
-            <template v-if="standards.length === 0">
-              <el-empty description="暂无党费标准数据" />
-            </template>
+          <el-table :data="standards" stripe style="width: 100%">
             <el-table-column prop="name" label="标准名称" width="200" />
             <el-table-column prop="baseAmount" label="基础金额" width="120">
               <template #default="{ row }">
@@ -118,15 +110,7 @@
             </el-button>
           </div>
 
-          <el-table
-            v-if="!loading && Array.isArray(payments)"
-            :data="payments"
-            stripe
-            style="width: 100%"
-          >
-            <template v-if="payments.length === 0">
-              <el-empty description="暂无缴费记录数据" />
-            </template>
+          <el-table :data="payments" stripe style="width: 100%">
             <el-table-column prop="memberName" label="党员姓名" width="120" />
             <el-table-column prop="standardName" label="缴费标准" width="150" />
             <el-table-column prop="amount" label="缴费金额" width="120">

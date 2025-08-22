@@ -131,15 +131,7 @@
       <!-- 组织统计 -->
       <el-tab-pane label="组织统计" name="organization">
         <div class="tab-content">
-          <el-table
-            v-if="!loading && Array.isArray(organizationStats)"
-            :data="organizationStats"
-            stripe
-            style="width: 100%"
-          >
-            <template v-if="organizationStats.length === 0">
-              <el-empty description="暂无组织统计数据" />
-            </template>
+          <el-table :data="organizationStats" stripe style="width: 100%">
             <el-table-column prop="name" label="组织名称" width="200" />
             <el-table-column prop="memberCount" label="党员数量" width="120" />
             <el-table-column prop="activityCount" label="活动数量" width="120" />
@@ -172,15 +164,7 @@
       <!-- 党员活动 -->
       <el-tab-pane label="党员活动" name="member">
         <div class="tab-content">
-          <el-table
-            v-if="!loading && Array.isArray(memberActivityStats)"
-            :data="memberActivityStats"
-            stripe
-            style="width: 100%"
-          >
-            <template v-if="memberActivityStats.length === 0">
-              <el-empty description="暂无党员活动统计数据" />
-            </template>
+          <el-table :data="memberActivityStats" stripe style="width: 100%">
             <el-table-column prop="name" label="党员姓名" width="120" />
             <el-table-column prop="organization" label="所属组织" width="150" />
             <el-table-column prop="activityCount" label="参与活动" width="120" />

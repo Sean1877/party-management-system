@@ -55,10 +55,7 @@ const menuRoutes = computed(() => {
     return []
   }
   
-  // 确保layoutRoute.children是数组，防止 'data2 is not iterable' 错误
-  const childrenData = Array.isArray(layoutRoute.children) ? layoutRoute.children : []
-  
-  return childrenData.filter(route => {
+  return layoutRoute.children.filter(route => {
     // 过滤掉不需要在菜单中显示的路由
     if (!route.meta || route.meta.hidden) {
       return false

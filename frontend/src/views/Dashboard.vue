@@ -365,23 +365,7 @@ const loadData = async () => {
       ]
     }
   } catch (error) {
-    console.error('Dashboard加载数据失败:', error)
-    console.error('错误详情:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    })
-    // 确保在错误情况下也有默认值
-    stats.value = {
-      totalUsers: 0,
-      totalOrganizations: 0,
-      totalActivities: 0,
-      activeUsers: 0
-    }
-    recentActivities.value = []
-    birthdayUsers.value = []
-    anniversaryUsers.value = []
-    partyMemberStats.value = []
+    console.error('加载数据失败:', error)
   }
 }
 
