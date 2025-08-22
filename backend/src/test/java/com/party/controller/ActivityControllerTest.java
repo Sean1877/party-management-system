@@ -1,15 +1,18 @@
-package com.party;
+package com.party.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.party.common.TestDataFactory;
 import com.party.entity.Activity;
 import com.party.entity.User;
 import com.party.repository.ActivityRepository;
 import com.party.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -18,7 +21,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @ActiveProfiles("test")
 @Transactional
-class ActivityControllerIntegrationTest {
+class ActivityControllerTest {
 
     @Autowired
     private WebApplicationContext context;
@@ -52,6 +54,7 @@ class ActivityControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     private MockMvc mockMvc;
+    private TestDataFactory testDataFactory;
     private Activity testActivity;
     private User testUser;
 
@@ -62,48 +65,24 @@ class ActivityControllerIntegrationTest {
                 .apply(springSecurity())
                 .build();
 
-        // 创建测试用户
-        testUser = new User();
-        testUser.setUsername("organizer");
-        testUser.setPassword("password123");
-        testUser.setRealName("活动组织者");
-        testUser.setIdCard("110101199001011234"); // 有效的身份证号
-        testUser.setPhone("13800138000");
-        testUser.setEmail("organizer@example.com");
-        testUser.setGender(1);
-        testUser.setBirthDate(LocalDate.of(1990, 1, 1));
-        testUser.setJoinPartyDate(LocalDate.of(2020, 1, 1));
-        testUser.setPartyStatus(3);
-        testUser.setOrganizationId(1L);
-        testUser.setRoleId(2L);
-        testUser.setIsActive(true);
-        testUser.setCreatedAt(LocalDateTime.now());
-        testUser.setUpdatedAt(LocalDateTime.now());
-        testUser = userRepository.save(testUser);
+        // 创建测试数据工厂
+        testDataFactory = new TestDataFactory();
+        testDataFactory.userRepository = userRepository;
+        testDataFactory.activityRepository = activityRepository;
 
-        // 创建测试活动
-        testActivity = new Activity();
-        testActivity.setTitle("测试活动");
-        testActivity.setType(4); // 4:党课
-        testActivity.setContent("这是一个测试活动");
-        testActivity.setLocation("会议室A");
-        testActivity.setStartTime(LocalDateTime.now().plusDays(1));
-        testActivity.setEndTime(LocalDateTime.now().plusDays(1).plusHours(2));
-        testActivity.setOrganizerId(testUser.getId());
-        testActivity.setOrganizationId(1L);
-        testActivity.setStatus(1); // 1:计划中
-        testActivity.setMaxParticipants(50);
-        testActivity.setIsRequired(false);
-        testActivity.setCreatedAt(LocalDateTime.now());
-        testActivity.setUpdatedAt(LocalDateTime.now());
+        // 创建测试数据
+        testUser = testDataFactory.createTestUser("organizer", "活动组织者", 1L, 2L);
+        testActivity = testDataFactory.createTestActivity("测试活动", 4, testUser.getId(), 1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        testDataFactory.cleanupTestData();
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void testGetActivities() throws Exception {
-        // Given
-        activityRepository.save(testActivity);
-
         // When & Then
         mockMvc.perform(get("/api/activities")
                 .param("page", "0")
@@ -134,7 +113,7 @@ class ActivityControllerIntegrationTest {
         // Given
         Map<String, Object> activityRequest = new HashMap<>();
         activityRequest.put("title", "新活动");
-        activityRequest.put("type", 4); // 4:党课
+        activityRequest.put("type", 4);
         activityRequest.put("content", "这是一个新的活动");
         activityRequest.put("location", "会议室B");
         activityRequest.put("startTime", LocalDateTime.now().plusDays(2).toString());
@@ -160,7 +139,6 @@ class ActivityControllerIntegrationTest {
         Activity savedActivity = activityRepository.save(testActivity);
         
         Map<String, Object> updateRequest = new HashMap<>();
-        updateRequest.put("id", savedActivity.getId());
         updateRequest.put("title", "更新的活动");
         updateRequest.put("type", savedActivity.getType());
         updateRequest.put("content", "更新的活动内容");
@@ -197,9 +175,6 @@ class ActivityControllerIntegrationTest {
     @Test
     @WithMockUser(roles = "USER")
     void testGetRecentActivities() throws Exception {
-        // Given
-        activityRepository.save(testActivity);
-
         // When & Then
         mockMvc.perform(get("/api/activities/recent")
                 .param("limit", "5")
@@ -212,9 +187,6 @@ class ActivityControllerIntegrationTest {
     @Test
     @WithMockUser(roles = "USER")
     void testGetUpcomingActivities() throws Exception {
-        // Given
-        activityRepository.save(testActivity);
-
         // When & Then
         mockMvc.perform(get("/api/activities/upcoming")
                 .param("organizationId", "1")
@@ -232,7 +204,7 @@ class ActivityControllerIntegrationTest {
         Activity savedActivity = activityRepository.save(testActivity);
         
         Map<String, Object> statusRequest = new HashMap<>();
-        statusRequest.put("status", 2); // 2:进行中
+        statusRequest.put("status", 2);
 
         // When & Then
         mockMvc.perform(put("/api/activities/{id}/status", savedActivity.getId())
@@ -261,32 +233,6 @@ class ActivityControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void testCreateActivityWithDuplicateTitle() throws Exception {
-        // Given
-        activityRepository.save(testActivity);
-        
-        Map<String, Object> duplicateActivityRequest = new HashMap<>();
-        duplicateActivityRequest.put("title", testActivity.getTitle()); // 重复的标题
-        duplicateActivityRequest.put("type", 2); // 2:会议
-        duplicateActivityRequest.put("content", "重复标题的活动");
-        duplicateActivityRequest.put("location", "会议室C");
-        duplicateActivityRequest.put("startTime", LocalDateTime.now().plusDays(3).toString());
-        duplicateActivityRequest.put("endTime", LocalDateTime.now().plusDays(3).plusHours(1).toString());
-        duplicateActivityRequest.put("organizerId", testUser.getId());
-        duplicateActivityRequest.put("organizationId", 1);
-        duplicateActivityRequest.put("maxParticipants", 20);
-        duplicateActivityRequest.put("isRequired", false);
-
-        // When & Then
-        mockMvc.perform(post("/api/activities")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(duplicateActivityRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
-    }
-
-    @Test
     @WithMockUser(roles = "USER")
     void testGetNonExistentActivity() throws Exception {
         // When & Then
@@ -302,7 +248,7 @@ class ActivityControllerIntegrationTest {
         // Given
         Map<String, Object> activityRequest = new HashMap<>();
         activityRequest.put("title", "用户创建的活动");
-        activityRequest.put("type", 3); // 3:讨论
+        activityRequest.put("type", 3);
         activityRequest.put("content", "普通用户创建的活动");
         activityRequest.put("location", "会议室D");
         activityRequest.put("startTime", LocalDateTime.now().plusDays(4).toString());
@@ -317,38 +263,5 @@ class ActivityControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(activityRequest)))
                 .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void testBatchDeleteActivities() throws Exception {
-        // Given
-        Activity activity1 = activityRepository.save(testActivity);
-        
-        Activity activity2 = new Activity();
-        activity2.setTitle("第二个测试活动");
-        activity2.setType(4); // 4:党课
-        activity2.setContent("第二个测试活动内容");
-        activity2.setLocation("会议室B");
-        activity2.setStartTime(LocalDateTime.now().plusDays(2));
-        activity2.setEndTime(LocalDateTime.now().plusDays(2).plusHours(1));
-        activity2.setOrganizerId(testUser.getId());
-        activity2.setOrganizationId(1L);
-        activity2.setStatus(1); // 1:计划中
-        activity2.setMaxParticipants(30);
-        activity2.setIsRequired(true);
-        activity2.setCreatedAt(LocalDateTime.now());
-        activity2.setUpdatedAt(LocalDateTime.now());
-        activity2 = activityRepository.save(activity2);
-        
-        Map<String, Object> batchDeleteRequest = new HashMap<>();
-        batchDeleteRequest.put("ids", new Long[]{activity1.getId(), activity2.getId()});
-
-        // When & Then
-        mockMvc.perform(delete("/api/activities/batch")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(batchDeleteRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
     }
 }

@@ -1,6 +1,7 @@
 package com.party.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.party.common.enums.PartyStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -294,14 +295,7 @@ public class User {
     }
 
     public String getPartyStatusText() {
-        if (partyStatus == null) return "未知";
-        switch (partyStatus) {
-            case 1: return "正式党员";
-            case 2: return "预备党员";
-            case 3: return "入党积极分子";
-            case 4: return "已退党";
-            default: return "未知";
-        }
+        return PartyStatus.getDescriptionByCode(partyStatus);
     }
 
     public void addRole(Role role) {

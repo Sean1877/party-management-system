@@ -61,9 +61,7 @@ public class Organization {
     @Column(name = "established_date")
     private LocalDate establishedDate;
 
-    @Column(name = "establish_date")
-    private LocalDate establishDate;
-
+    
     @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean isActive = true;
 
@@ -281,13 +279,7 @@ public class Organization {
         return parentId == null;
     }
 
-    /**
-     * 是否有子组织
-     */
-    public boolean hasChildOrganizations() {
-        return childOrganizations != null && !childOrganizations.isEmpty();
-    }
-
+    
     /**
      * 是否为根组织
      */
@@ -295,20 +287,7 @@ public class Organization {
         return parentId == null;
     }
 
-    /**
-     * 获取建立日期
-     */
-    public LocalDate getEstablishDate() {
-        return establishDate;
-    }
-
-    /**
-     * 设置建立日期
-     */
-    public void setEstablishDate(LocalDate establishDate) {
-        this.establishDate = establishDate;
-    }
-
+    
     /**
      * 获取子组织列表
      */

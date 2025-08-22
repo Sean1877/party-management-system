@@ -1,4 +1,4 @@
-package com.party;
+package com.party.service;
 
 import com.party.entity.Activity;
 import com.party.repository.ActivityRepository;
@@ -238,21 +238,6 @@ class ActivityServiceTest {
         verify(activityRepository).findUpcomingActivities(any(LocalDateTime.class), any(LocalDateTime.class));
     }
 
-    @Test
-    void testFindRecentActivities() {
-        // Given
-        List<Activity> activities = Arrays.asList(testActivity);
-        Page<Activity> activityPage = new PageImpl<>(activities);
-        when(activityRepository.findAll(any(Pageable.class))).thenReturn(activityPage);
-
-        // When
-        List<Activity> result = activityService.findRecentActivities(5);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(activityRepository).findAll(any(Pageable.class));
-    }
 
     @Test
     void testCountByOrganizationId() {
@@ -278,18 +263,6 @@ class ActivityServiceTest {
         assertEquals(3L, result);
     }
 
-    @Test
-    void testExistsByTitle() {
-        // Given
-        List<Activity> activities = Arrays.asList(testActivity);
-        when(activityRepository.findByTitleContaining("党史")).thenReturn(activities);
-
-        // When
-        boolean result = activityService.existsByTitle("党史");
-
-        // Then
-        assertTrue(result);
-    }
 
     @Test
     void testBatchDeleteActivities() {

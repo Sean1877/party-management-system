@@ -1,5 +1,6 @@
 package com.party.controller;
 
+import com.party.common.controller.BaseController;
 import com.party.entity.Activity;
 import com.party.entity.ActivityParticipant;
 import com.party.service.ActivityService;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.HashMap;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/activities")
 @Tag(name = "活动管理", description = "活动相关的API接口")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
-public class ActivityController {
+public class ActivityController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityController.class);
     

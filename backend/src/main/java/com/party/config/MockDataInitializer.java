@@ -118,7 +118,7 @@ public class MockDataInitializer implements CommandLineRunner {
         partyCommittee.setDescription("单位党委，负责全单位党建工作");
         partyCommittee.setAddress("北京市朝阳区某某街道123号");
         partyCommittee.setContactPhone("010-12345678");
-        partyCommittee.setEstablishDate(LocalDate.of(2020, 1, 1));
+        partyCommittee.setEstablishedDate(LocalDate.of(2020, 1, 1));
         partyCommittee = organizationRepository.save(partyCommittee);
 
         // 创建党总支
@@ -131,7 +131,7 @@ public class MockDataInitializer implements CommandLineRunner {
         generalBranch1.setDescription("第一党总支，负责行政部门党建工作");
         generalBranch1.setAddress("北京市朝阳区某某街道123号A座");
         generalBranch1.setContactPhone("010-12345679");
-        generalBranch1.setEstablishDate(LocalDate.of(2020, 3, 1));
+        generalBranch1.setEstablishedDate(LocalDate.of(2020, 3, 1));
         generalBranch1 = organizationRepository.save(generalBranch1);
 
         Organization generalBranch2 = new Organization();
@@ -143,7 +143,7 @@ public class MockDataInitializer implements CommandLineRunner {
         generalBranch2.setDescription("第二党总支，负责业务部门党建工作");
         generalBranch2.setAddress("北京市朝阳区某某街道123号B座");
         generalBranch2.setContactPhone("010-12345680");
-        generalBranch2.setEstablishDate(LocalDate.of(2020, 3, 15));
+        generalBranch2.setEstablishedDate(LocalDate.of(2020, 3, 15));
         generalBranch2 = organizationRepository.save(generalBranch2);
 
         // 创建党支部
@@ -171,7 +171,7 @@ public class MockDataInitializer implements CommandLineRunner {
         branch.setParentId(parentId);
         branch.setLevel(3);
         branch.setDescription(description);
-        branch.setEstablishDate(LocalDate.of(2020, 6, 1));
+        branch.setEstablishedDate(LocalDate.of(2020, 6, 1));
         return branch;
     }
 

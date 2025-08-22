@@ -1,5 +1,7 @@
 package com.party.entity;
 
+import com.party.common.enums.ActivityType;
+import com.party.common.enums.ActivityStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -242,26 +244,11 @@ public class Activity {
 
     // 工具方法
     public String getTypeText() {
-        if (type == null) return "未知";
-        switch (type) {
-            case 1: return "支部党员大会";
-            case 2: return "支部委员会";
-            case 3: return "党小组会";
-            case 4: return "党课";
-            case 5: return "主题党日活动";
-            default: return "未知";
-        }
+        return ActivityType.getDescriptionByCode(type);
     }
 
     public String getStatusText() {
-        if (status == null) return "未知";
-        switch (status) {
-            case 1: return "计划中";
-            case 2: return "进行中";
-            case 3: return "已结束";
-            case 4: return "已取消";
-            default: return "未知";
-        }
+        return ActivityStatus.getDescriptionByCode(status);
     }
 
     public int getParticipantCount() {

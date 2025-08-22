@@ -125,8 +125,8 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (StringUtils.hasText(organization.getContactPhone())) {
             existingOrganization.setContactPhone(organization.getContactPhone());
         }
-        if (organization.getEstablishDate() != null) {
-            existingOrganization.setEstablishDate(organization.getEstablishDate());
+        if (organization.getEstablishedDate() != null) {
+            existingOrganization.setEstablishedDate(organization.getEstablishedDate());
         }
         if (organization.getIsActive() != null) {
             existingOrganization.setIsActive(organization.getIsActive());
@@ -480,7 +480,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     public List<Organization> findLeafOrganizations() {
         List<Organization> allOrganizations = organizationRepository.findAll();
         return allOrganizations.stream()
-                .filter(org -> !org.hasChildOrganizations())
+                .filter(org -> !org.hasChildren())
                 .collect(Collectors.toList());
     }
 
