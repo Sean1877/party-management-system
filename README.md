@@ -187,17 +187,178 @@ party-management-system/
 
 ## 🧪 测试
 
-### 后端测试
+本项目采用全面的测试策略，包括单元测试、集成测试、接口测试和UI自动化测试，确保代码质量和系统稳定性。
+
+### 🔧 后端测试
+
+#### 测试框架与工具
+- **测试框架**: JUnit 5
+- **Mock框架**: Mockito
+- **测试工具**: Spring Boot Test, Spring Security Test
+- **数据库**: H2 内存数据库（测试专用）
+
+#### 测试类型与结构
+- **单元测试**: `src/test/java/com/party/service/` - 服务层业务逻辑测试
+- **控制器测试**: `src/test/java/com/party/controller/` - REST API接口测试
+- **集成测试**: 使用`@SpringBootTest`进行完整应用上下文测试
+- **测试工具类**: `src/test/java/com/party/common/` - 测试数据工厂和配置
+
+#### 运行后端测试
 ```bash
+# 进入后端目录
 cd backend
+
+# 运行所有测试
 mvn test
+
+# 运行特定测试类
+mvn test -Dtest=UserServiceTest
+
+# 运行测试并生成覆盖率报告
+mvn test jacoco:report
+
+# 跳过测试进行构建
+mvn clean package -DskipTests
 ```
 
-### 前端测试
+#### 测试覆盖的功能模块
+- ✅ 用户管理服务测试
+- ✅ 活动管理服务测试
+- ✅ 组织管理服务测试
+- ✅ 操作日志服务测试
+- ✅ 用户控制器集成测试
+- ✅ 活动控制器集成测试
+
+### 🎯 前端测试
+
+#### 测试框架与工具
+- **测试框架**: Vitest
+- **测试工具**: Vue Test Utils, Testing Library
+- **Mock工具**: Vi (Vitest内置)
+- **UI测试**: Vitest UI界面
+- **覆盖率工具**: V8 Coverage
+
+#### 测试类型与结构
+- **组件测试**: `tests/components/` - Vue组件单元测试
+- **页面测试**: `tests/views/` - 页面组件集成测试
+- **状态管理测试**: `tests/stores/` - Pinia状态管理测试
+- **工具函数测试**: `tests/utils/` - 工具函数单元测试
+- **配置测试**: `tests/config.test.js` - 应用配置测试
+
+#### 运行前端测试
 ```bash
+# 进入前端目录
 cd frontend
+
+# 运行所有测试
 npm run test
+
+# 运行测试（一次性）
+npm run test:run
+
+# 监听模式运行测试
+npm run test:watch
+
+# 运行测试并生成覆盖率报告
+npm run test:coverage
+
+# 启动测试UI界面
+npm run test:ui
+
+# 运行组件测试（详细输出）
+npm run test:component
 ```
+
+#### 测试覆盖的功能模块
+- ✅ 用户管理页面测试
+- ✅ 活动管理页面测试
+- ✅ 费用管理页面测试
+- ✅ 数据统计页面测试
+- ✅ 个人中心页面测试
+- ✅ 系统设置测试
+- ✅ 用户状态管理测试
+- ✅ 工具函数测试
+
+#### 测试覆盖率要求
+- **分支覆盖率**: ≥70%
+- **函数覆盖率**: ≥70%
+- **行覆盖率**: ≥70%
+- **语句覆盖率**: ≥70%
+
+### 🌐 接口测试
+
+#### API测试工具
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **测试环境**: 集成测试中的REST API测试
+- **认证测试**: JWT Token认证流程测试
+
+#### 主要接口测试覆盖
+- **认证接口**: 登录、注册、Token验证
+- **用户管理**: CRUD操作、角色分配、状态管理
+- **组织管理**: 组织结构、层级关系、状态控制
+- **活动管理**: 活动发布、报名、签到、统计
+- **数据统计**: 各模块数据分析接口
+
+#### 运行接口测试
+```bash
+# 后端集成测试包含API接口测试
+cd backend
+mvn test -Dtest="*IntegrationTest"
+
+# 启动应用后访问Swagger进行手动接口测试
+mvn spring-boot:run
+# 访问: http://localhost:8080/swagger-ui.html
+```
+
+### 🤖 UI自动化测试
+
+#### E2E测试框架
+- **推荐框架**: Playwright / Cypress（可根据需要集成）
+- **测试范围**: 关键用户流程端到端测试
+- **浏览器支持**: Chrome, Firefox, Safari
+
+#### 主要测试场景
+- **用户认证流程**: 登录、登出、权限验证
+- **核心业务流程**: 用户管理、活动管理、组织管理
+- **数据交互**: 表单提交、数据查询、状态更新
+- **响应式测试**: 不同屏幕尺寸适配测试
+
+#### UI测试最佳实践
+```bash
+# 安装Playwright（示例）
+npm install -D @playwright/test
+
+# 运行E2E测试（待实现）
+npm run test:e2e
+
+# 生成测试报告
+npm run test:e2e:report
+```
+
+### 📊 测试报告
+
+#### 测试结果查看
+- **后端测试报告**: `backend/target/surefire-reports/`
+- **前端测试报告**: `frontend/test-results/junit.xml`
+- **覆盖率报告**: `frontend/coverage/index.html`
+
+#### 持续集成
+- 所有PR需通过完整测试套件
+- 自动化测试在CI/CD流水线中执行
+- 测试失败将阻止代码合并
+
+### 🔍 测试规范
+
+#### 测试命名规范
+- **测试文件**: `*.test.js` 或 `*Test.java`
+- **测试方法**: `should_期望结果_when_测试条件`
+- **Mock数据**: 使用测试数据工厂统一管理
+
+#### 测试编写原则
+- **单一职责**: 每个测试用例只测试一个功能点
+- **独立性**: 测试用例之间不应相互依赖
+- **可重复**: 测试结果应该稳定可重复
+- **清晰性**: 测试代码应易于理解和维护
 
 ## 📦 构建部署
 
