@@ -68,6 +68,8 @@ const mockRouter = {
   go: vi.fn(),
   back: vi.fn(),
   forward: vi.fn(),
+  beforeEach: vi.fn(),
+  afterEach: vi.fn(),
   currentRoute: {
     value: {
       path: '/',
@@ -83,6 +85,48 @@ config.global.mocks = {
   $router: mockRouter,
   $route: mockRouter.currentRoute.value
 }
+
+// Mock Element Plus module
+vi.mock('element-plus', async () => {
+  const actual = await vi.importActual('element-plus')
+  return {
+    ...actual,
+    ElMessage: {
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn()
+    },
+    ElMessageBox: {
+      confirm: vi.fn(),
+      alert: vi.fn(),
+      prompt: vi.fn()
+    },
+    ElNotification: {
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn()
+    },
+    ElLoading: {
+      service: vi.fn(() => ({
+        close: vi.fn()
+      }))
+    }
+  }
+})
+
+// Mock vue-router
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual('vue-router')
+  return {
+    ...actual,
+    createRouter: vi.fn(() => mockRouter),
+    createWebHistory: vi.fn(),
+    useRouter: vi.fn(() => mockRouter),
+    useRoute: vi.fn(() => mockRouter.currentRoute.value)
+  }
+})
 
 // Mock Element Plus components globally
 config.global.stubs = {
