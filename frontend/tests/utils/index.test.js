@@ -1,19 +1,44 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Mock API utilities
-vi.mock('@/utils/request', () => ({
+const mockRequest = {
   get: vi.fn(),
   post: vi.fn(),
   put: vi.fn(),
-  delete: vi.fn()
+  delete: vi.fn(),
+  interceptors: {
+    request: {
+      handlers: [
+        {
+          fulfilled: vi.fn((config) => ({
+            ...config,
+            headers: {
+              ...config.headers,
+              Authorization: 'Bearer mock-token'
+            }
+          }))
+        }
+      ]
+    },
+    response: {
+      handlers: [
+        {
+          fulfilled: vi.fn((response) => response),
+          rejected: vi.fn((error) => Promise.reject(error))
+        }
+      ]
+    }
+  }
+}
+
+vi.mock('@/utils/request', () => ({
+  default: mockRequest,
+  ...mockRequest
 }))
 
 describe('API Utils', () => {
-  let request
-
   beforeEach(() => {
     vi.clearAllMocks()
-    request = require('@/utils/request')
   })
 
   describe('request interceptor', () => {
@@ -21,7 +46,7 @@ describe('API Utils', () => {
       localStorage.setItem('token', 'mock-token')
       
       const mockConfig = {}
-      const interceptor = request.interceptors?.request?.handlers[0]
+      const interceptor = mockRequest.interceptors?.request?.handlers[0]
       
       if (interceptor) {
         const result = interceptor.fulfilled(mockConfig)

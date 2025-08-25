@@ -91,6 +91,7 @@ vi.mock('element-plus', async () => {
   const actual = await vi.importActual('element-plus')
   return {
     ...actual,
+    default: actual,
     ElMessage: {
       success: vi.fn(),
       error: vi.fn(),

@@ -1,53 +1,29 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/vue'
-import { createPinia, setActivePinia } from 'pinia'
-import { useRouter } from 'vue-router'
+import { mount } from '@vue/test-utils'
 import Login from '@/views/Login.vue'
+import * as vueRouter from 'vue-router'
+import * as userStore from '@/stores/user'
+import * as userAPI from '@/api/user'
+import * as elementPlus from 'element-plus'
+import { testHelpers } from '../mocks/testHelpers'
 
-// Mock dependencies
-vi.mock('vue-router', () => ({
-  useRouter: vi.fn()
-}))
-
-vi.mock('@/stores/user', () => ({
-  useUserStore: vi.fn()
-}))
-
-vi.mock('@/api/user', () => ({
-  login: vi.fn()
-}))
-
-// Mock Element Plus
-vi.mock('element-plus', () => ({
-  ElMessage: {
-    success: vi.fn(),
-    error: vi.fn()
-  }
-}))
+// 使用全局 Mock，无需重复定义
 
 describe('Login', () => {
-  let routerMock
-  let userStoreMock
-  let pinia
+  let wrapper
 
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
 
-    // Setup router mock
-    routerMock = {
-      push: vi.fn(),
-      replace: vi.fn()
-    }
-    useRouter.mockReturnValue(routerMock)
-
-    // Setup user store mock
-    userStoreMock = {
-      login: vi.fn(),
-      isAuthenticated: false,
-      user: null
-    }
-    const { useUserStore } = require('@/stores/user')
+    // Setup mock implementations
+    vi.mocked(userAPI.login).mockResolvedValue({ data: { token: 'mock-token', user: { id: 1, username: 'test' } } })
+    
+    wrapper = mount(Login, {
+      global: {
+        stubs: testHelpers.createElementPlusStubs()
+      }
+    })
     useUserStore.mockReturnValue(userStoreMock)
 
     // Setup Pinia

@@ -13,7 +13,7 @@ export default defineConfig({
     globals: true,
     
     // 设置文件
-    setupFiles: ['./tests/mocks/setup.js'],
+    setupFiles: ['./tests/mocks/setup.js', './tests/mocks/globalMocks.js'],
     
     // 测试文件匹配模式
     include: [
@@ -107,7 +107,8 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@api': path.resolve(__dirname, 'src/api'),
       '@layout': path.resolve(__dirname, 'src/layout'),
-      '@styles': path.resolve(__dirname, 'src/styles')
+      '@styles': path.resolve(__dirname, 'src/styles'),
+      '@tests': path.resolve(__dirname, 'tests')
     }
   },
   
