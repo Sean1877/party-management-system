@@ -150,3 +150,13 @@ Thumbs.db
 # Auto-generated files
 auto-imports.d.ts
 components.d.ts
+
+# Test results and cache
+**/test-results/
+**/.jest-cache/
+**/junit.xml
+**/coverage/
+**/*.lcov
+
+# Claude local settings
+.claude/settings.local.json
