@@ -52,14 +52,19 @@ public class OperationLogController {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<OperationLog> logs = operationLogService.findAll(pageable);
         
+        Map<String, Object> data = new HashMap<>();
+        data.put("list", logs.getContent());
+        data.put("total", logs.getTotalElements());
+        data.put("totalPages", logs.getTotalPages());
+        data.put("page", logs.getNumber());
+        data.put("pageSize", logs.getSize());
+        data.put("hasNext", logs.hasNext());
+        data.put("hasPrevious", logs.hasPrevious());
+        
         Map<String, Object> response = new HashMap<>();
-        response.put("content", logs.getContent());
-        response.put("totalElements", logs.getTotalElements());
-        response.put("totalPages", logs.getTotalPages());
-        response.put("currentPage", logs.getNumber());
-        response.put("size", logs.getSize());
-        response.put("hasNext", logs.hasNext());
-        response.put("hasPrevious", logs.hasPrevious());
+        response.put("success", true);
+        response.put("message", "查询成功");
+        response.put("data", data);
         
         return ResponseEntity.ok(response);
     }
@@ -67,10 +72,16 @@ public class OperationLogController {
     @GetMapping("/{id}")
     @Operation(summary = "根据ID查询操作日志", description = "根据ID查询单个操作日志详情")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<OperationLog> getOperationLogById(
+    public ResponseEntity<Map<String, Object>> getOperationLogById(
             @Parameter(description = "操作日志ID") @PathVariable Long id) {
         OperationLog log = operationLogService.findById(id);
-        return ResponseEntity.ok(log);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "查询成功");
+        response.put("data", log);
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/search")

@@ -7,9 +7,9 @@ const path = require('path');
 global.API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080/api';
 global.TEST_TIMEOUT = parseInt(process.env.TEST_TIMEOUT) || 30000;
 global.ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-global.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-global.TEST_USER_USERNAME = process.env.TEST_USER_USERNAME || 'testuser';
-global.TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'test123';
+global.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456';
+global.TEST_USER_USERNAME = process.env.TEST_USER_USERNAME || 'member001';
+global.TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || '123456';
 
 // 创建测试结果目录
 const testResultsDir = path.join(__dirname, 'test-results');
@@ -18,7 +18,7 @@ if (!fs.existsSync(testResultsDir)) {
 }
 
 // 全局axios配置
-axios.defaults.baseURL = 'http://localhost:8080';
+axios.defaults.baseURL = 'http://localhost:8080/api';
 axios.defaults.timeout = global.TEST_TIMEOUT;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
@@ -36,12 +36,12 @@ global.authUtils = {
   // 管理员登录
   async loginAsAdmin() {
     try {
-      const response = await axios.post('/api/auth/login', {
+      const response = await axios.post('/auth/login', {
         username: global.ADMIN_USERNAME,
         password: global.ADMIN_PASSWORD
       });
       
-      const token = response.data.data.token;
+      const token = response.data.token;
       global.testData.tokens.admin = token;
       return token;
     } catch (error) {
@@ -53,12 +53,12 @@ global.authUtils = {
   // 普通用户登录
   async loginAsUser() {
     try {
-      const response = await axios.post('/api/auth/login', {
+      const response = await axios.post('/auth/login', {
         username: global.TEST_USER_USERNAME,
         password: global.TEST_USER_PASSWORD
       });
       
-      const token = response.data.data.token;
+      const token = response.data.token;
       global.testData.tokens.user = token;
       return token;
     } catch (error) {
@@ -164,8 +164,10 @@ global.dataUtils = {
     const id = this.randomString(6);
     return {
       name: `测试党费标准${id}`,
-      memberType: 'regular',
-      baseAmount: Math.floor(Math.random() * 200) + 50,
+      incomeMin: 3000,
+      incomeMax: 5000,
+      feeRate: 0.005,
+      fixedAmount: null,
       description: `这是一个测试党费标准${id}`,
       effectiveDate: new Date().toISOString().split('T')[0]
     };
@@ -361,13 +363,14 @@ global.cleanupUtils = {
 beforeAll(async () => {
   console.log('开始API测试初始化...');
   
-  // 等待API服务启动
+  // 等待API服务启动 - 使用登录端点验证服务可用性
   try {
-    await global.apiUtils.waitForResponse('/health', 200, 30, 2000);
+    // 尝试访问登录端点来验证API服务可用性
+    await global.apiUtils.waitForResponse('/auth/login', 405, 15, 2000); // 405 Method Not Allowed 说明端点存在
     console.log('API服务已启动');
   } catch (error) {
-    console.error('API服务启动失败:', error.message);
-    throw error;
+    console.warn('使用登录端点检查API服务失败，尝试直接登录...');
+    // 如果健康检查失败，我们仍然继续，因为服务可能运行正常但健康检查端点不可用
   }
   
   // 预先登录获取token

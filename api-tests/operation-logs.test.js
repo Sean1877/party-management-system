@@ -102,12 +102,12 @@ describe('操作日志API测试', () => {
       // 验证日志结构
       const log = response.data.data.list[0];
       expect(log).toHaveProperty('id');
-      expect(log).toHaveProperty('operation');
-      expect(log).toHaveProperty('module');
+      expect(log).toHaveProperty('operationType');
+      expect(log).toHaveProperty('operationModule');
       expect(log).toHaveProperty('username');
       expect(log).toHaveProperty('ipAddress');
       expect(log).toHaveProperty('userAgent');
-      expect(log).toHaveProperty('status');
+      expect(log).toHaveProperty('success');
       expect(log).toHaveProperty('createdAt');
       
       testLogId = log.id;
@@ -118,7 +118,7 @@ describe('操作日志API测试', () => {
       
       global.assertUtils.expectPaginatedResponse(response);
       response.data.data.list.forEach(log => {
-        expect(log.operation).toBe('LOGIN');
+        expect(log.operationType).toBe('LOGIN');
       });
     });
     
@@ -127,7 +127,7 @@ describe('操作日志API测试', () => {
       
       global.assertUtils.expectPaginatedResponse(response);
       response.data.data.list.forEach(log => {
-        expect(log.module).toBe('USER');
+        expect(log.operationModule).toBe('USER');
       });
     });
     

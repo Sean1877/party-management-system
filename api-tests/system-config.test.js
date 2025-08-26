@@ -25,7 +25,7 @@ describe('系统配置管理API测试', () => {
   
   describe('创建系统配置', () => {
     test('管理员创建系统配置', async () => {
-      const response = await global.apiUtils.post('/system/configs', testConfig, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', testConfig, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data).toHaveProperty('id');
@@ -47,7 +47,7 @@ describe('系统配置管理API测试', () => {
         description: '用户测试配置'
       };
       
-      const response = await global.apiUtils.post('/system/configs', configData, userHeaders);
+      const response = await global.apiUtils.post('/system/config', configData, userHeaders);
       
       global.assertUtils.expectError(response, 403, '权限不足');
     });
@@ -58,7 +58,7 @@ describe('系统配置管理API测试', () => {
         // 缺少configValue和configType
       };
       
-      const response = await global.apiUtils.post('/system/configs', incompleteData, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', incompleteData, adminHeaders);
       
       global.assertUtils.expectError(response, 400);
     });
@@ -69,7 +69,7 @@ describe('系统配置管理API测试', () => {
         configKey: testConfig.configKey // 使用已存在的配置键
       };
       
-      const response = await global.apiUtils.post('/system/configs', duplicateData, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', duplicateData, adminHeaders);
       
       global.assertUtils.expectError(response, 400, '配置键已存在');
     });
@@ -81,7 +81,7 @@ describe('系统配置管理API测试', () => {
         configType: 'invalid_type' // 无效的配置类型
       };
       
-      const response = await global.apiUtils.post('/system/configs', invalidData, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', invalidData, adminHeaders);
       
       global.assertUtils.expectError(response, 400, '配置类型');
     });
@@ -89,7 +89,7 @@ describe('系统配置管理API测试', () => {
   
   describe('查询系统配置', () => {
     test('获取系统配置列表', async () => {
-      const response = await global.apiUtils.get('/system/configs', adminHeaders);
+      const response = await global.apiUtils.get('/system/config', adminHeaders);
       
       global.assertUtils.expectPaginatedResponse(response);
       expect(response.data.data.list).toBeInstanceOf(Array);
@@ -101,7 +101,7 @@ describe('系统配置管理API测试', () => {
     });
     
     test('按分类筛选系统配置', async () => {
-      const response = await global.apiUtils.get(`/system/configs?category=${testConfig.category}`, adminHeaders);
+      const response = await global.apiUtils.get(`/system/config?category=${testConfig.category}`, adminHeaders);
       
       global.assertUtils.expectPaginatedResponse(response);
       response.data.data.list.forEach(config => {
@@ -110,7 +110,7 @@ describe('系统配置管理API测试', () => {
     });
     
     test('按配置类型筛选', async () => {
-      const response = await global.apiUtils.get(`/system/configs?configType=${testConfig.configType}`, adminHeaders);
+      const response = await global.apiUtils.get(`/system/config?configType=${testConfig.configType}`, adminHeaders);
       
       global.assertUtils.expectPaginatedResponse(response);
       response.data.data.list.forEach(config => {
@@ -120,7 +120,7 @@ describe('系统配置管理API测试', () => {
     
     test('按配置键搜索', async () => {
       const searchKey = testConfig.configKey.substring(0, 10);
-      const response = await global.apiUtils.get(`/system/configs?search=${searchKey}`, adminHeaders);
+      const response = await global.apiUtils.get(`/system/config?search=${searchKey}`, adminHeaders);
       
       global.assertUtils.expectPaginatedResponse(response);
       response.data.data.list.forEach(config => {
@@ -129,7 +129,7 @@ describe('系统配置管理API测试', () => {
     });
     
     test('分页查询系统配置', async () => {
-      const response = await global.apiUtils.get('/system/configs?page=1&pageSize=5', adminHeaders);
+      const response = await global.apiUtils.get('/system/config?page=1&pageSize=5', adminHeaders);
       
       global.assertUtils.expectPaginatedResponse(response, 5);
       expect(response.data.data.page).toBe(1);
@@ -137,7 +137,7 @@ describe('系统配置管理API测试', () => {
     });
     
     test('获取单个系统配置详情', async () => {
-      const response = await global.apiUtils.get(`/system/configs/${testConfig.id}`, adminHeaders);
+      const response = await global.apiUtils.get(`/system/config/${testConfig.id}`, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.id).toBe(testConfig.id);
@@ -145,14 +145,14 @@ describe('系统配置管理API测试', () => {
     });
     
     test('通过配置键获取配置值', async () => {
-      const response = await global.apiUtils.get(`/system/configs/key/${testConfig.configKey}`, adminHeaders);
+      const response = await global.apiUtils.get(`/system/config/key/${testConfig.configKey}`, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.configValue).toBe(testConfig.configValue);
     });
     
     test('获取不存在的系统配置应失败', async () => {
-      const response = await global.apiUtils.get('/system/configs/999999', adminHeaders);
+      const response = await global.apiUtils.get('/system/config/999999', adminHeaders);
       
       global.assertUtils.expectError(response, 404, '未找到');
     });
@@ -168,10 +168,10 @@ describe('系统配置管理API测试', () => {
         isSensitive: true
       };
       
-      const createResponse = await global.apiUtils.post('/system/configs', sensitiveConfig, adminHeaders);
+      const createResponse = await global.apiUtils.post('/system/config', sensitiveConfig, adminHeaders);
       const configId = createResponse.data.data.id;
       
-      const response = await global.apiUtils.get(`/system/configs/${configId}`, userHeaders);
+      const response = await global.apiUtils.get(`/system/config/${configId}`, userHeaders);
       
       global.assertUtils.expectError(response, 403, '权限不足');
     });
@@ -184,7 +184,7 @@ describe('系统配置管理API测试', () => {
         description: '更新后的描述'
       };
       
-      const response = await global.apiUtils.put(`/system/configs/${testConfig.id}`, updateData, adminHeaders);
+      const response = await global.apiUtils.put(`/system/config/${testConfig.id}`, updateData, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.configValue).toBe(updateData.configValue);
@@ -196,7 +196,7 @@ describe('系统配置管理API测试', () => {
         configValue: 'user_updated_value'
       };
       
-      const response = await global.apiUtils.put(`/system/configs/${testConfig.id}`, updateData, userHeaders);
+      const response = await global.apiUtils.put(`/system/config/${testConfig.id}`, updateData, userHeaders);
       
       global.assertUtils.expectError(response, 403, '权限不足');
     });
@@ -206,7 +206,7 @@ describe('系统配置管理API测试', () => {
         configValue: 'updated_value'
       };
       
-      const response = await global.apiUtils.put('/system/configs/999999', updateData, adminHeaders);
+      const response = await global.apiUtils.put('/system/config/999999', updateData, adminHeaders);
       
       global.assertUtils.expectError(response, 404, '未找到');
     });
@@ -216,7 +216,7 @@ describe('系统配置管理API测试', () => {
         configKey: 'new_config_key' // 不允许更新配置键
       };
       
-      const response = await global.apiUtils.put(`/system/configs/${testConfig.id}`, updateData, adminHeaders);
+      const response = await global.apiUtils.put(`/system/config/${testConfig.id}`, updateData, adminHeaders);
       
       global.assertUtils.expectError(response, 400, '配置键不可修改');
     });
@@ -233,7 +233,7 @@ describe('系统配置管理API测试', () => {
           category: 'test'
         };
         
-        const createResponse = await global.apiUtils.post('/system/configs', configData, adminHeaders);
+        const createResponse = await global.apiUtils.post('/system/config', configData, adminHeaders);
         configs.push(createResponse.data.data);
       }
       
@@ -243,7 +243,7 @@ describe('系统配置管理API测试', () => {
         configValue: `updated_${config.configValue}`
       }));
       
-      const response = await global.apiUtils.put('/system/configs/batch', { configs: batchUpdateData }, adminHeaders);
+      const response = await global.apiUtils.put('/system/config/batch', { configs: batchUpdateData }, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.updated).toBe(configs.length);
@@ -263,28 +263,28 @@ describe('系统配置管理API测试', () => {
         category: 'test'
       };
       
-      const response = await global.apiUtils.post('/system/configs', configData, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', configData, adminHeaders);
       deletableConfig = response.data.data;
     });
     
     test('管理员删除系统配置', async () => {
-      const response = await global.apiUtils.delete(`/system/configs/${deletableConfig.id}`, adminHeaders);
+      const response = await global.apiUtils.delete(`/system/config/${deletableConfig.id}`, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       
       // 验证配置已被删除
-      const getResponse = await global.apiUtils.get(`/system/configs/${deletableConfig.id}`, adminHeaders);
+      const getResponse = await global.apiUtils.get(`/system/config/${deletableConfig.id}`, adminHeaders);
       global.assertUtils.expectError(getResponse, 404);
     });
     
     test('普通用户删除系统配置应失败', async () => {
-      const response = await global.apiUtils.delete(`/system/configs/${deletableConfig.id}`, userHeaders);
+      const response = await global.apiUtils.delete(`/system/config/${deletableConfig.id}`, userHeaders);
       
       global.assertUtils.expectError(response, 403, '权限不足');
     });
     
     test('删除不存在的系统配置应失败', async () => {
-      const response = await global.apiUtils.delete('/system/configs/999999', adminHeaders);
+      const response = await global.apiUtils.delete('/system/config/999999', adminHeaders);
       
       global.assertUtils.expectError(response, 404, '未找到');
     });
@@ -300,10 +300,10 @@ describe('系统配置管理API测试', () => {
         isSystem: true
       };
       
-      const createResponse = await global.apiUtils.post('/system/configs', criticalConfig, adminHeaders);
+      const createResponse = await global.apiUtils.post('/system/config', criticalConfig, adminHeaders);
       const configId = createResponse.data.data.id;
       
-      const response = await global.apiUtils.delete(`/system/configs/${configId}`, adminHeaders);
+      const response = await global.apiUtils.delete(`/system/config/${configId}`, adminHeaders);
       
       global.assertUtils.expectError(response, 400, '系统配置不可删除');
     });
@@ -318,7 +318,7 @@ describe('系统配置管理API测试', () => {
         description: '字符串配置'
       };
       
-      const response = await global.apiUtils.post('/system/configs', stringConfig, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', stringConfig, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.configValue).toBe(stringConfig.configValue);
@@ -332,7 +332,7 @@ describe('系统配置管理API测试', () => {
         description: '数字配置'
       };
       
-      const response = await global.apiUtils.post('/system/configs', numberConfig, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', numberConfig, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.configValue).toBe(numberConfig.configValue);
@@ -346,7 +346,7 @@ describe('系统配置管理API测试', () => {
         description: '布尔配置'
       };
       
-      const response = await global.apiUtils.post('/system/configs', booleanConfig, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', booleanConfig, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.configValue).toBe(booleanConfig.configValue);
@@ -360,7 +360,7 @@ describe('系统配置管理API测试', () => {
         description: 'JSON配置'
       };
       
-      const response = await global.apiUtils.post('/system/configs', jsonConfig, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', jsonConfig, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.configValue).toBe(jsonConfig.configValue);
@@ -374,7 +374,7 @@ describe('系统配置管理API测试', () => {
         description: '无效JSON配置'
       };
       
-      const response = await global.apiUtils.post('/system/configs', invalidJsonConfig, adminHeaders);
+      const response = await global.apiUtils.post('/system/config', invalidJsonConfig, adminHeaders);
       
       global.assertUtils.expectError(response, 400, 'JSON格式');
     });
@@ -382,21 +382,21 @@ describe('系统配置管理API测试', () => {
   
   describe('配置缓存管理', () => {
     test('刷新配置缓存', async () => {
-      const response = await global.apiUtils.post('/system/configs/cache/refresh', {}, adminHeaders);
+      const response = await global.apiUtils.post('/system/config/cache/refresh', {}, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.message).toContain('缓存刷新成功');
     });
     
     test('清空配置缓存', async () => {
-      const response = await global.apiUtils.delete('/system/configs/cache', adminHeaders);
+      const response = await global.apiUtils.delete('/system/config/cache', adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.message).toContain('缓存清空成功');
     });
     
     test('普通用户操作缓存应失败', async () => {
-      const response = await global.apiUtils.post('/system/configs/cache/refresh', {}, userHeaders);
+      const response = await global.apiUtils.post('/system/config/cache/refresh', {}, userHeaders);
       
       global.assertUtils.expectError(response, 403, '权限不足');
     });
@@ -404,14 +404,14 @@ describe('系统配置管理API测试', () => {
   
   describe('配置导入导出', () => {
     test('导出系统配置', async () => {
-      const response = await global.apiUtils.get('/system/configs/export?format=json', adminHeaders);
+      const response = await global.apiUtils.get('/system/config/export?format=json', adminHeaders);
       
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toContain('application/json');
     });
     
     test('按分类导出配置', async () => {
-      const response = await global.apiUtils.get(`/system/configs/export?format=json&category=${testConfig.category}`, adminHeaders);
+      const response = await global.apiUtils.get(`/system/config/export?format=json&category=${testConfig.category}`, adminHeaders);
       
       expect(response.status).toBe(200);
     });
@@ -436,7 +436,7 @@ describe('系统配置管理API测试', () => {
         ]
       };
       
-      const response = await global.apiUtils.post('/system/configs/import', importData, adminHeaders);
+      const response = await global.apiUtils.post('/system/config/import', importData, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.imported).toBe(2);
@@ -454,17 +454,17 @@ describe('系统配置管理API测试', () => {
         ]
       };
       
-      const response = await global.apiUtils.post('/system/configs/import', importData, adminHeaders);
+      const response = await global.apiUtils.post('/system/config/import', importData, adminHeaders);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.skipped).toBe(1);
     });
     
     test('普通用户导入导出应失败', async () => {
-      const exportResponse = await global.apiUtils.get('/system/configs/export', userHeaders);
+      const exportResponse = await global.apiUtils.get('/system/config/export', userHeaders);
       global.assertUtils.expectError(exportResponse, 403, '权限不足');
       
-      const importResponse = await global.apiUtils.post('/system/configs/import', { configs: [] }, userHeaders);
+      const importResponse = await global.apiUtils.post('/system/config/import', { configs: [] }, userHeaders);
       global.assertUtils.expectError(importResponse, 403, '权限不足');
     });
   });
@@ -483,7 +483,7 @@ describe('系统配置管理API测试', () => {
       const startTime = Date.now();
       
       const promises = configs.map(config => 
-        global.apiUtils.post('/system/configs', config, adminHeaders)
+        global.apiUtils.post('/system/config', config, adminHeaders)
       );
       
       const responses = await Promise.all(promises);
@@ -506,7 +506,7 @@ describe('系统配置管理API测试', () => {
     test('大数据量查询性能', async () => {
       const startTime = Date.now();
       
-      const response = await global.apiUtils.get('/system/configs?pageSize=500', adminHeaders);
+      const response = await global.apiUtils.get('/system/config?pageSize=500', adminHeaders);
       
       const endTime = Date.now();
       const responseTime = endTime - startTime;

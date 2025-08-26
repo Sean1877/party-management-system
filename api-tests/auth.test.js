@@ -14,7 +14,7 @@ describe('认证API测试', () => {
     test('正常注册新用户', async () => {
       const userData = global.dataUtils.generateUserData();
       
-      const response = await global.apiUtils.post('/api/auth/register', userData);
+      const response = await global.apiUtils.post('/auth/register', userData);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data).toHaveProperty('id');
@@ -29,10 +29,10 @@ describe('认证API测试', () => {
       const userData = global.dataUtils.generateUserData();
       
       // 第一次注册
-      await global.apiUtils.post('/api/auth/register', userData);
+      await global.apiUtils.post('/auth/register', userData);
       
       // 第二次注册相同用户名
-      const response = await global.apiUtils.post('/api/auth/register', userData);
+      const response = await global.apiUtils.post('/auth/register', userData);
       
       global.assertUtils.expectError(response, 400, '用户名已存在');
     });
@@ -43,10 +43,10 @@ describe('认证API测试', () => {
       userData2.email = userData1.email; // 使用相同邮箱
       
       // 第一次注册
-      await global.apiUtils.post('/api/auth/register', userData1);
+      await global.apiUtils.post('/auth/register', userData1);
       
       // 第二次注册相同邮箱
-      const response = await global.apiUtils.post('/api/auth/register', userData2);
+      const response = await global.apiUtils.post('/auth/register', userData2);
       
       global.assertUtils.expectError(response, 400, '邮箱已存在');
     });
@@ -58,7 +58,7 @@ describe('认证API测试', () => {
         email: 'test@example.com'
       };
       
-      const response = await global.apiUtils.post('/api/auth/register', incompleteData);
+      const response = await global.apiUtils.post('/auth/register', incompleteData);
       
       global.assertUtils.expectError(response, 400);
     });
@@ -67,54 +67,54 @@ describe('认证API测试', () => {
       const userData = global.dataUtils.generateUserData();
       userData.email = 'invalid-email';
       
-      const response = await global.apiUtils.post('/api/auth/register', userData);
+      const response = await global.apiUtils.post('/auth/register', userData);
       
       global.assertUtils.expectError(response, 400, '邮箱格式');
     });
   });
   
   describe('用户登录', () => {
-    beforeAll(async () => {
-      // 创建测试用户
-      const response = await global.apiUtils.post('/api/auth/register', testUser);
-      global.testData.users[testUser.username] = response.data.data;
-    });
+    // 使用系统中已存在的用户进行测试
+    const existingUser = {
+      username: 'member001',
+      password: '123456'
+    };
     
     test('正确用户名密码登录', async () => {
       const loginData = {
-        username: testUser.username,
-        password: testUser.password
+        username: existingUser.username,
+        password: existingUser.password
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', loginData);
+      const response = await global.apiUtils.post('/auth/login', loginData);
       
       global.assertUtils.expectSuccess(response);
-      expect(response.data.data).toHaveProperty('token');
-      expect(response.data.data).toHaveProperty('user');
-      expect(response.data.data.user.username).toBe(testUser.username);
+      expect(response.data).toHaveProperty('token');
+      expect(response.data).toHaveProperty('data');
+      expect(response.data.data.username).toBe(existingUser.username);
       
       // 保存token用于后续测试
-      global.testData.tokens[testUser.username] = response.data.data.token;
+      global.testData.tokens[existingUser.username] = response.data.token;
     });
     
     test('错误用户名登录应失败', async () => {
       const loginData = {
         username: 'nonexistent',
-        password: testUser.password
+        password: existingUser.password
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', loginData);
+      const response = await global.apiUtils.post('/auth/login', loginData);
       
       global.assertUtils.expectError(response, 401, '用户名或密码错误');
     });
     
     test('错误密码登录应失败', async () => {
       const loginData = {
-        username: testUser.username,
+        username: existingUser.username,
         password: 'wrongpassword'
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', loginData);
+      const response = await global.apiUtils.post('/auth/login', loginData);
       
       global.assertUtils.expectError(response, 401, '用户名或密码错误');
     });
@@ -125,7 +125,7 @@ describe('认证API测试', () => {
         password: testUser.password
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', loginData);
+      const response = await global.apiUtils.post('/auth/login', loginData);
       
       global.assertUtils.expectError(response, 400);
     });
@@ -136,7 +136,7 @@ describe('认证API测试', () => {
         password: ''
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', loginData);
+      const response = await global.apiUtils.post('/auth/login', loginData);
       
       global.assertUtils.expectError(response, 400);
     });
@@ -147,7 +147,7 @@ describe('认证API测试', () => {
     
     beforeAll(async () => {
       // 登录获取token
-      const loginResponse = await global.apiUtils.post('/api/auth/login', {
+      const loginResponse = await global.apiUtils.post('/auth/login', {
         username: testUser.username,
         password: testUser.password
       });
@@ -157,14 +157,14 @@ describe('认证API测试', () => {
     test('有效token访问受保护资源', async () => {
       const headers = global.authUtils.getAuthHeaders(userToken);
       
-      const response = await global.apiUtils.get('/api/auth/profile', headers);
+      const response = await global.apiUtils.get('/auth/profile', headers);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.username).toBe(testUser.username);
     });
     
     test('无token访问受保护资源应失败', async () => {
-      const response = await global.apiUtils.get('/api/auth/profile');
+      const response = await global.apiUtils.get('/auth/profile');
       
       global.assertUtils.expectError(response, 401, '未授权');
     });
@@ -172,7 +172,7 @@ describe('认证API测试', () => {
     test('无效token访问受保护资源应失败', async () => {
       const headers = global.authUtils.getAuthHeaders('invalid-token');
       
-      const response = await global.apiUtils.get('/api/auth/profile', headers);
+      const response = await global.apiUtils.get('/auth/profile', headers);
       
       global.assertUtils.expectError(response, 401, 'token无效');
     });
@@ -182,7 +182,7 @@ describe('认证API测试', () => {
       const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.invalid';
       const headers = global.authUtils.getAuthHeaders(expiredToken);
       
-      const response = await global.apiUtils.get('/api/auth/profile', headers);
+      const response = await global.apiUtils.get('/auth/profile', headers);
       
       global.assertUtils.expectError(response, 401);
     });
@@ -192,7 +192,7 @@ describe('认证API测试', () => {
     let userToken;
     
     beforeAll(async () => {
-      const loginResponse = await global.apiUtils.post('/api/auth/login', {
+      const loginResponse = await global.apiUtils.post('/auth/login', {
         username: testUser.username,
         password: testUser.password
       });
@@ -202,7 +202,7 @@ describe('认证API测试', () => {
     test('获取用户信息', async () => {
       const headers = global.authUtils.getAuthHeaders(userToken);
       
-      const response = await global.apiUtils.get('/api/auth/profile', headers);
+      const response = await global.apiUtils.get('/auth/profile', headers);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data).toHaveProperty('id');
@@ -218,7 +218,7 @@ describe('认证API测试', () => {
         phone: global.dataUtils.randomPhone()
       };
       
-      const response = await global.apiUtils.put('/api/auth/profile', updateData, headers);
+      const response = await global.apiUtils.put('/auth/profile', updateData, headers);
       
       global.assertUtils.expectSuccess(response);
       expect(response.data.data.realName).toBe(updateData.realName);
@@ -232,12 +232,12 @@ describe('认证API测试', () => {
         newPassword: 'newpassword123'
       };
       
-      const response = await global.apiUtils.put('/api/auth/password', passwordData, headers);
+      const response = await global.apiUtils.put('/auth/password', passwordData, headers);
       
       global.assertUtils.expectSuccess(response);
       
       // 验证新密码可以登录
-      const loginResponse = await global.apiUtils.post('/api/auth/login', {
+      const loginResponse = await global.apiUtils.post('/auth/login', {
         username: testUser.username,
         password: passwordData.newPassword
       });
@@ -252,7 +252,7 @@ describe('认证API测试', () => {
         newPassword: 'newpassword123'
       };
       
-      const response = await global.apiUtils.put('/api/auth/password', passwordData, headers);
+      const response = await global.apiUtils.put('/auth/password', passwordData, headers);
       
       global.assertUtils.expectError(response, 400, '原密码错误');
     });
@@ -266,7 +266,7 @@ describe('认证API测试', () => {
       adminToken = await global.authUtils.loginAsAdmin();
       
       // 获取普通用户token
-      const loginResponse = await global.apiUtils.post('/api/auth/login', {
+      const loginResponse = await global.apiUtils.post('/auth/login', {
         username: testUser.username,
         password: 'newpassword123' // 使用修改后的密码
       });
@@ -292,7 +292,7 @@ describe('认证API测试', () => {
     test('普通用户访问自己的资源', async () => {
       const headers = global.authUtils.getAuthHeaders(userToken);
       
-      const response = await global.apiUtils.get('/api/auth/profile', headers);
+      const response = await global.apiUtils.get('/auth/profile', headers);
       
       global.assertUtils.expectSuccess(response);
     });
@@ -302,7 +302,7 @@ describe('认证API测试', () => {
     let userToken;
     
     beforeAll(async () => {
-      const loginResponse = await global.apiUtils.post('/api/auth/login', {
+      const loginResponse = await global.apiUtils.post('/auth/login', {
         username: testUser.username,
         password: 'newpassword123'
       });
@@ -312,17 +312,17 @@ describe('认证API测试', () => {
     test('正常登出', async () => {
       const headers = global.authUtils.getAuthHeaders(userToken);
       
-      const response = await global.apiUtils.post('/api/auth/logout', {}, headers);
+      const response = await global.apiUtils.post('/auth/logout', {}, headers);
       
       global.assertUtils.expectSuccess(response);
       
       // 验证token已失效
-      const profileResponse = await global.apiUtils.get('/api/auth/profile', headers);
+      const profileResponse = await global.apiUtils.get('/auth/profile', headers);
       global.assertUtils.expectError(profileResponse, 401);
     });
     
     test('无token登出应失败', async () => {
-      const response = await global.apiUtils.post('/api/auth/logout');
+      const response = await global.apiUtils.post('/auth/logout');
       
       global.assertUtils.expectError(response, 401);
     });
@@ -335,7 +335,7 @@ describe('认证API测试', () => {
         password: 'password'
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', maliciousData);
+      const response = await global.apiUtils.post('/auth/login', maliciousData);
       
       // 应该返回正常的认证失败，而不是服务器错误
       expect(response.status).toBe(401);
@@ -347,7 +347,7 @@ describe('认证API测试', () => {
         password: 'password'
       };
       
-      const response = await global.apiUtils.post('/api/auth/login', xssData);
+      const response = await global.apiUtils.post('/auth/login', xssData);
       
       // 应该返回正常的认证失败
       expect(response.status).toBe(401);
@@ -364,7 +364,7 @@ describe('认证API测试', () => {
       // 连续多次错误登录
       const attempts = [];
       for (let i = 0; i < 6; i++) {
-        attempts.push(global.apiUtils.post('/api/auth/login', loginData));
+        attempts.push(global.apiUtils.post('/auth/login', loginData));
       }
       
       const responses = await Promise.all(attempts);
@@ -386,7 +386,7 @@ describe('认证API测试', () => {
       };
       
       const startTime = Date.now();
-      const response = await global.apiUtils.post('/api/auth/login', loginData);
+      const response = await global.apiUtils.post('/auth/login', loginData);
       const endTime = Date.now();
       
       const responseTime = endTime - startTime;
@@ -403,7 +403,7 @@ describe('认证API测试', () => {
       
       // 并发10个登录请求
       const promises = Array(10).fill().map(() => 
-        global.apiUtils.post('/api/auth/login', loginData)
+        global.apiUtils.post('/auth/login', loginData)
       );
       
       const startTime = Date.now();

@@ -1,5 +1,4 @@
 const request = require('supertest');
-const { expect } = require('chai');
 
 // 测试配置
 const BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
@@ -10,7 +9,7 @@ let authToken = '';
 
 describe('统计分析 API 测试', () => {
   // 测试前的准备工作
-  before(async () => {
+  beforeAll(async () => {
     // 登录获取认证token
     const loginResponse = await request(BASE_URL)
       .post(`${API_PREFIX}/api/auth/login`)

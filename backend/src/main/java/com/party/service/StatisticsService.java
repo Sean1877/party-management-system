@@ -137,4 +137,19 @@ public interface StatisticsService {
      * @return 导出数据统计
      */
     Map<String, Object> getExportStatistics(String exportType, Map<String, Object> filters);
+
+    // 新增方法供StatisticsController使用
+    Map<String, Object> getSystemOverview();
+    List<Map<String, Object>> getUserGrowthTrend(int period);
+    List<Map<String, Object>> getUserAgeDistribution();
+    List<Map<String, Object>> getUserGenderDistribution();
+    List<Map<String, Object>> getOrganizationDistribution();
+    List<Map<String, Object>> getOrganizationMemberGrowth(int period);
+    Map<String, Object> getActivityOverview();
+    List<Map<String, Object>> getActivityTypeDistribution();
+    List<Map<String, Object>> getActivityParticipationTrend(int period);
+    Map<String, Object> getFeeOverview();
+    List<Map<String, Object>> getFeePaymentTrend(int period, String type);
+    List<Map<String, Object>> getFeePaymentMethods();
+    Map<String, Object> getFeeOverdue();
 }

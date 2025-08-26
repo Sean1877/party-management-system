@@ -42,6 +42,91 @@ public class AuthController {
     private JwtUtils jwtUtils;
 
     /**
+     * 用户注册
+     */
+    @PostMapping("/register")
+    @Operation(summary = "用户注册", description = "用户注册账号")
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> registerRequest) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String username = registerRequest.get("username");
+            String password = registerRequest.get("password");
+            String email = registerRequest.get("email");
+            String realName = registerRequest.get("realName");
+            String phone = registerRequest.get("phone");
+            
+            logger.info("用户注册尝试: {}", username);
+            
+            // 验证必填字段
+            if (username == null || password == null || email == null) {
+                response.put("success", false);
+                response.put("message", "用户名、密码和邮箱不能为空");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            
+            // 验证邮箱格式
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                response.put("success", false);
+                response.put("message", "邮箱格式不正确");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            
+            // 检查用户名是否已存在
+            Optional<User> existingUserByUsername = userService.findByUsername(username);
+            if (existingUserByUsername.isPresent()) {
+                response.put("success", false);
+                response.put("message", "用户名已存在");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            
+            // 检查邮箱是否已存在
+            Optional<User> existingUserByEmail = userService.findByEmail(email);
+            if (existingUserByEmail.isPresent()) {
+                response.put("success", false);
+                response.put("message", "邮箱已存在");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            
+            // 创建新用户
+            User newUser = new User();
+            newUser.setUsername(username);
+            newUser.setPassword(passwordEncoder.encode(password));
+            newUser.setEmail(email);
+            newUser.setRealName(realName != null ? realName : username);
+            newUser.setPhone(phone);
+            newUser.setOrganizationId(1L); // 默认组织
+            newUser.setPartyStatus(0); // 0表示申请人
+            newUser.setIsActive(true);
+            
+            User savedUser = userService.save(newUser);
+            
+            // 返回用户信息（不包含密码）
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", savedUser.getId());
+            userInfo.put("username", savedUser.getUsername());
+            userInfo.put("realName", savedUser.getRealName());
+            userInfo.put("email", savedUser.getEmail());
+            userInfo.put("phone", savedUser.getPhone());
+            userInfo.put("partyStatus", savedUser.getPartyStatus());
+            userInfo.put("isActive", savedUser.getIsActive());
+            
+            response.put("success", true);
+            response.put("message", "注册成功");
+            response.put("data", userInfo);
+            
+            logger.info("用户注册成功: {}", username);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("注册失败: {}", e.getMessage(), e);
+            response.put("success", false);
+            response.put("message", "注册失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    /**
      * 用户登录
      */
     @PostMapping("/login")
